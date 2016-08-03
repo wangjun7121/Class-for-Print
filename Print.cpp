@@ -86,7 +86,7 @@ void CPrint::MW_PrintBitmap(const unsigned char *pcPicAddr)
     size_t result;  
       
     /* 若要一个char不漏地读入整个文件，只能采用二进制方式打开 */   
-    pFile = fopen ("D:\\VC_Project\\Demo\\Bitmap.bmp", "rb" );  
+    pFile = fopen ("D:\\VC_Project\\Demo\\熊猫.bmp", "rb" );  
     if (pFile==NULL)  
     {  
         fputs ("File error",stderr);  
@@ -136,8 +136,8 @@ void CPrint::MW_PrintBitmap(const unsigned char *pcPicAddr)
 
 
 	//设置字符行间距为 0 点行
-//     unsigned char data[] = { 0x1B, 0x33, 0x00 };
-// 	WriteToPort(data, sizeof(data));
+    unsigned char data[] = { 0x1B, 0x33, 0x00 };
+ 	WriteToPort(data, sizeof(data));
 
 	//ESC * m nL nH d1…dk   选择位图模式
 	// ESC * m nL nH
@@ -145,7 +145,7 @@ void CPrint::MW_PrintBitmap(const unsigned char *pcPicAddr)
 
 	////////////////////////
 	// for test
-	unsigned char ucaBitData[10];
+	//unsigned char ucaBitData[10];
 	/*
 	// 8 点单密度, 最多可打 48 个，即192 列，按示例图算，一行应该有 384 
 	escBmp[2] = 0x00;
@@ -189,29 +189,29 @@ void CPrint::MW_PrintBitmap(const unsigned char *pcPicAddr)
 	*/
 	
 	
-	// 24 点双密度
-	////////////////////////
-	escBmp[2] = 0x21; // 0x21
-	escBmp[3] = 0x02;
-	escBmp[4] = 0x00;
-	WriteToPort(escBmp, 5);
-	ucaBitData[0] = 0x00;
-	ucaBitData[1] = 0xFF;
-	ucaBitData[2] = 0x00;
-
-// 	ucaBitData[1] = 0x00;
+// 	// 24 点双密度
+// 	////////////////////////
+// 	escBmp[2] = 0x21; // 0x21
+// 	escBmp[3] = 0x06;
+// 	escBmp[4] = 0x00;
+// 	WriteToPort(escBmp, 5);
+// 	ucaBitData[0] = 0xFF;
 // 	ucaBitData[4] = 0x00;
+// 	ucaBitData[8] = 0x00;
+// 
+// 	ucaBitData[1] = 0x00;
+// 	ucaBitData[4] = 0xFF;
 // 	ucaBitData[7] = 0x00;
 // 
 // 	ucaBitData[2] = 0x00;
 // 	ucaBitData[5] = 0x00;
-// 	ucaBitData[8] = 0x00;
-
-	for(int i = 0; i < 2; i++)
-	{
-		WriteToPort(ucaBitData, 3);
-	}
-	MW_LF();
+// 	ucaBitData[8] = 0xFF;
+// 
+// 	for(int i = 0; i < 2; i++)
+// 	{
+// 		WriteToPort(ucaBitData, 9);
+// 	}
+// 	MW_LF();
 	
 
 
@@ -222,50 +222,49 @@ void CPrint::MW_PrintBitmap(const unsigned char *pcPicAddr)
 			0x32: 24 点单密度，192 宽的位图 
 			0x33: 24 点双密度，384 宽的位图 
 	*/
-// 	escBmp[2] = 0x33;
-// 	
-// 	//nL, nH
-// 	escBmp[3] = (unsigned char)(ptBitmapH->biWidth % 256);
-// 	escBmp[4] = (unsigned char)(ptBitmapH->biWidth / 256);
-// 	
-// 
-// 
-// 
-// 	int iWidth;
-// 	int iHeight;
-// 	int iBMPBpp;
-// 	int iLineWidthAlign;
-// 	int iLineWidthReal;
-// 	int iCurPiexl;
-// 	int iCurBlue;
-// 
-// 	unsigned char ucaData[10] = {0};
-// 	unsigned char *pucSrc; // 指向图片数据
-// 
-// 	iWidth = ptBitmapH->biWidth;
-// 	iHeight = ptBitmapH->biHeight;
-// 	iBMPBpp = ptBitmapH->biBitCount;
-// 	
-// 	iLineWidthReal = iWidth * iBMPBpp / 8;
-// 	iLineWidthAlign = (iLineWidthReal + 3) & ~0x3;   // 向 4 取整 
-// 	
-// 	
-// 
-// 	pucSrc = pucBuffer + ptBitmap->bfOffBits;
-// 	//pucSrc = pucSrc + (iHeight - 1) * iLineWidthAlign;  // 指向最后一行 
-// 	for ( i = 0; i < 16; i++)
-// 	{
-// 		printf("%02d ", i); 
-// 	}
-// 	for(i = 0; i < 96; i++)
-// 	{
-// 		if (i % 16 == 0)
-// 		{
-// 			printf("\n");
-// 		}
-// 		printf("%02X ", pucSrc[i]); 
-// 	}
-// 	printf("\n");
+	escBmp[2] = 0x21;
+	
+	//nL, nH
+	escBmp[3] = (unsigned char)(ptBitmapH->biWidth % 256);
+	escBmp[4] = (unsigned char)(ptBitmapH->biWidth / 256);
+	
+
+
+
+	int iWidth;
+	int iHeight;
+	int iBMPBpp;
+	int iLineWidthAlign;
+	int iLineWidthReal;
+	int iCurBlue;
+	int iCurLine;
+	unsigned char ucaData[10] = {0};
+	unsigned char *pucSrc; // 指向图片数据
+
+	iWidth = ptBitmapH->biWidth;
+	iHeight = ptBitmapH->biHeight;
+	iBMPBpp = ptBitmapH->biBitCount;
+	
+	iLineWidthReal = iWidth * iBMPBpp / 8;
+	iLineWidthAlign = (iLineWidthReal + 3) & ~0x3;   // 向 4 取整 
+	
+	
+
+	pucSrc = pucBuffer + ptBitmap->bfOffBits;
+	//pucSrc = pucSrc + (iHeight - 1) * iLineWidthAlign;  // 指向最后一行 
+	for (int i = 0; i < 16; i++)
+	{
+		printf("%02d ", i); 
+	}
+	for(i = 0; i < 96; i++)
+	{
+		if (i % 16 == 0)
+		{
+			printf("\n");
+		}
+		printf("%02X ", pucSrc[i]); 
+	}
+	printf("\n");
 
 //  // 8 点单密度
 // 	for (int y = 0; y < (iHeight / 8 + 1); y++)// 循环组，每 8 行一组 + 1 处理最后一组
@@ -298,54 +297,58 @@ void CPrint::MW_PrintBitmap(const unsigned char *pcPicAddr)
 // 		MW_LF();
 // 	}
 
-// 	for (int y = 0; y < (iHeight / 24 + 1); y++)// 循环组，每 8 行一组 + 1 处理最后一组
-// 	{	
-// 		WriteToPort(escBmp, 5);
-// 		for (int x = 0; x < iWidth; x++)// 循环列，每列一字节
-// 		{
-// 			ucaData[0] = 0x00;
-// 			ucaData[1] = 0x00;
-// 			ucaData[2] = 0x00;
-// 			for (int z = 0; z < 24; z++) // 循环每列字节位
-// 			{
-// 				//当前像素点标号(从 0 开始) = 第几位 * 每行像素数 + 本行第向个像素 + 第几组 * 组行数 * 每行像素数 =(z * iWidth + x + y * 8 * iWidth);
-// 				iCurPiexl = (z * iWidth + x + y * 24 * iWidth);
-// 
-// 				// 判断是还在当前位图中 
-// 				if (iCurPiexl < iWidth * iHeight)
-// 				{
-// 					// iCurPiexl / iWidth = 所在行 
-// 					// iCurPiexl % iWidth = 所在列 = x
-// 					// 进行 4 字节对齐后的像素位置 = 所在行 * 对齐后的列宽 + 所在列 * 3（24 位深）
-// 					iCurBlue = iCurPiexl / iWidth * iLineWidthAlign + ( (iWidth - x - 1) * 3); // (iWidth - x - 1) 行数据颠倒
-// 					if (pucSrc[iCurBlue] != 0xFF ) // 0x00 0x00 0x00 表示黑色，0xFF 0xFF 0xFF 表示白色
-// 					{
-// 						if ( z < 8)
-// 						{
-// 							ucaData[0] |= (1 << (7-z));
-// 						}
-// 						else
-// 						if ( (z >= 8) && (z < 16) )
-// 						{
-// 							ucaData[1] |= (1 << (7-z));
-// 						}
-// 						else
-// 						if((z >= 16) && (z < 24))
-// 						{
-// 							ucaData[2] |= (1 << (7-z));
-// 						}
-// 						
-// 					}
-// 				}	
-// 			}
-// 			WriteToPort(ucaData, 3);
+	for (int y = 0; y < (iHeight / 24 + 1); y++)// 循环组，每 24 行一组 + 1 处理最后一组
+	{	
+		WriteToPort(escBmp, 5);
+		for (int x = 0; x < iWidth; x++)// 循环列，每列3字节
+		{
+			ucaData[0] = 0x00;
+			ucaData[1] = 0x00;
+			ucaData[2] = 0x00;
+			for (int z = 0; z < 24; z++) // 循环每列字节位
+			{
+				//当前像素点标号(从 0 开始) = 第几位 * 每行像素数 + 本行第向个像素 + 第几组 * 组行数 * 每行像素数 =(z * iWidth + x + y * 8 * iWidth);
+				//iCurPiexl = (z * iWidth + x + y * 24 * iWidth);
+
+				// 所在行 = 当前第几位 + 当前组 * 组成员个数
+				iCurLine = z + y * 24;
+
+				// 判断是还在当前位图中 
+				if (iCurLine < iHeight)
+				{
+					// iCurPiexl / iWidth = 所在行 = 当前第几位 + 当前组 * 组成员个数
+					// iCurPiexl % iWidth = 所在列 = x
+
+					// 进行 4 字节对齐后的像素位置 = 所在行 * 对齐后的列宽 + 所在列 * 3（24 位深）
+					iCurBlue = iCurLine * iLineWidthAlign + ( (iWidth - x - 1) * 3); // (iWidth - x - 1) 行数据颠倒
+					if (pucSrc[iCurBlue] != 0xFF ) // 0x00 0x00 0x00 表示黑色，0xFF 0xFF 0xFF 表示白色
+					{
+						if ( z < 8)
+						{
+							ucaData[0] |= (1 << (7-z));
+						}
+						else
+						if ( (z >= 8) && (z < 16) )
+						{
+							ucaData[1] |= (1 << (15-z));
+						}
+						else
+						if((z >= 16) && (z < 24))
+						{
+							ucaData[2] |= (1 << (23-z));
+						}
+						
+					}
+				}	
+			}
+			WriteToPort(ucaData, 3);
 // 			printf("0x%X ", ucaData[0]);
 // 			printf("0x%X ", ucaData[1]);
 // 			printf("0x%X ", ucaData[2]);
 // 			printf("\n");
-// 		}
-// 		MW_LF();
-// 	}
+		}
+		MW_LF();
+	}
 
 
 	/////////////////////////////////////////////////////////////////////////

@@ -126,7 +126,15 @@ SOURCE=.\Bitmap.bmp
 # End Source File
 # Begin Source File
 
+SOURCE=.\Bitmap1x32.bmp
+# End Source File
+# Begin Source File
+
 SOURCE=.\Bitmap24_Location.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Bitmap48x48.bmp
 # End Source File
 # Begin Source File
 
