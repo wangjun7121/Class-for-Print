@@ -369,9 +369,24 @@ int CPrint::MW_PrintString(char *pcString)
 	return -((size_t)iByteSent != strlen(pcString));
 }
 
-
-int CPrint::MW_SelectPrintMode(unsigned char mode)
+/**********************************************************************
+* 函数名称： MW_SelectPrintMode
+* 功能描述： 选择打印模式
+* 输入参数： mode
+* 输出参数： 无
+* 返 回 值： 0 成功，失败返回 -1
+* 其它说明： 字符以换行结束才会被打印出来，对于不是以换行结尾的字符串，
+                程序会自动添加换行打印出来。
+***********************************************************************/
+int CPrint::MW_SelectPrintMode(unsigned char ucMode)
 {
-
-    return 0;
+    if (ucMode <= 0 || ucMode >=255 )
+        return -1;
+    
+    unsigned char cWriteBuf[10];
+    cWriteBuf[0] = 0x1B;
+    cWriteBuf[1] = 0x21;
+    cWriteBuf[2] = ucMode;
+    WriteToPort(cWriteBuf, 3);
+	return 0;
 }

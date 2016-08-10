@@ -41,13 +41,13 @@ int main(int argc, char* argv[])
 // 		printf("i = %d err = 0x%X\n", i, err);
 // 	}
 
-//     // 3. ÉèÖÃ×Ö·ûÓÒ¼ä¾à
+//     // 3. ÉèÖÃ×Ö·ûÓÒ¼ä¾à£¬Èç A B ±ä³É A    B
 //  	g_clsPrint->MW_SetCharRightSpace(10);
 //     
-    // 4. ´òÓ¡×Ö·û´®
-    unsigned char err;
-    err = g_clsPrint->MW_PrintString(pString2);
-    printf("err = %d\n", err);
+//     // 4. ´òÓ¡×Ö·û´®
+//     unsigned char err;
+//     err = g_clsPrint->MW_PrintString(pString2);
+//     printf("err = %d\n", err);
 
 
 

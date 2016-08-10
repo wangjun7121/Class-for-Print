@@ -23,14 +23,39 @@ CSerialPort::~CSerialPort()//析构中释放
 		m_hComm = NULL;
 	}
 }
+/**********************************************************************
+* 函数名称： setPortName
+* 功能描述： 设置串口号
+* 输入参数： port 要设置的串口号
+* 输出参数： 无
+* 返 回 值： 无
+* 其它说明： 
+***********************************************************************/
 void CSerialPort::setPortName( const int port)//设置串口号
 {
     m_port = port;
 }
+/**********************************************************************
+* 函数名称： setBaud
+* 功能描述： 设置串口波特率
+* 输入参数： baud 要设备的波特率
+* 输出参数： 无
+* 返 回 值： 无
+* 其它说明： 
+***********************************************************************/
 void CSerialPort::setBaud( UINT baud )//设置波特率
 {
 	m_baud = baud;
 }
+
+/**********************************************************************
+* 函数名称： ClosePort
+* 功能描述： 关闭串口
+* 输入参数： 无
+* 输出参数： 无
+* 返 回 值： 无
+* 其它说明： 
+***********************************************************************/
 void CSerialPort::ClosePort()//关闭串口
 {
 	if (m_hComm != INVALID_HANDLE_VALUE)
@@ -39,6 +64,15 @@ void CSerialPort::ClosePort()//关闭串口
 	}
 	m_hComm = INVALID_HANDLE_VALUE;
 }
+/**********************************************************************
+* 函数名称： InitPort
+* 功能描述： 初始化串口
+* 输入参数： portnr 串口号，baud 波特率，parity 极性，databits 数据位，
+                stopsbits 停止位
+* 输出参数： 无
+* 返 回 值： 成功返回 TRUE，失败返回 FALSE
+* 其它说明： 
+***********************************************************************/
 BOOL CSerialPort::InitPort( UINT portnr, UINT baud, char parity, UINT databits, UINT stopsbits )//打开串口
 {
 	//assert(portnr > 0 && portnr < 50);
@@ -104,6 +138,15 @@ BOOL CSerialPort::InitPort( UINT portnr, UINT baud, char parity, UINT databits, 
 	PurgeComm(m_hComm, PURGE_RXCLEAR | PURGE_TXCLEAR | PURGE_RXABORT | PURGE_TXABORT);
 	return TRUE;
 }
+
+/**********************************************************************
+* 函数名称： WriteToPort
+* 功能描述： 向串口写数据
+* 输入参数： *writeData 指向要发送的数据，WriteSize 为要发送的数据大小
+* 输出参数： 无
+* 返 回 值： 成功返回发送的字节数，失败返回 -1
+* 其它说明： 
+***********************************************************************/
 int	CSerialPort::WriteToPort( unsigned  char *writeData, int WriteSize )//发送数据
 {
 	BOOL bResult = TRUE;
@@ -142,6 +185,14 @@ int	CSerialPort::WriteToPort( unsigned  char *writeData, int WriteSize )//发送数
 	return BytesSent;
 }
 //----------------
+/**********************************************************************
+* 函数名称： ReceiveChar
+* 功能描述： 从串口接收数据
+* 输入参数： *readBuff 指向接收数据缓存，ReadSize 为要接收的字节数
+* 输出参数： 无
+* 返 回 值： 成功返回接收的字节数，失败返回 -1
+* 其它说明： 
+***********************************************************************/
 int	CSerialPort::ReceiveChar( char *readBuff, int ReadSize )//接收数据
 {
 	BOOL  bRead = TRUE; 
