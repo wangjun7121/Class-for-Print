@@ -8,28 +8,50 @@
 CPrint * g_clsPrint = new CPrint();
 
 
+char * pString = "-------------------------------\n"
+				"购货总额：                11.00\n"
+				"付款：   现金 人民币     101.00\n"
+				"找零：   现金 人民币      90.00\n"
+				"   售出商品数量：4件\n"
+				"      2005-09-13  16:50:19\n"
+				"       欢迎光临   多谢惠顾\n"
+				"        （开发票当月有效）\n"
+				"       满家福百货南邮店\n"
+				"小票：270500027721 收银员：01012\n"
+				"-------------------------------\n";
+char *pString2 = "123456789101112131415161718192021222324252627282930\n";
+
 int main(int argc, char* argv[])
 {
 
 	g_clsPrint->setPortName(2);
 	g_clsPrint->setBaud(115200);
 	g_clsPrint->InitPort();
-	//一下是打印机的功能
- 	//char cWriteBuf[10];
-// 	cWriteBuf[0] = 0x0A;
-// 	for(int i = 0; i < 2; i++)//循环发送  打印空的5行
-// 	{
-// 		//g_clsPrint->WriteToPort("Hello!", 6);
-// 		g_clsPrint->MW_LF(); //发送打印换行
+//////////////////////////////////////////////////////////
+//以下是打印机的功能测试
+// 	//1. 打印位图
+//	g_clsPrint->MW_PrintBitmap("D:\\VC_Project\\Demo\\熊猫.bmp");
+	
+// 	// 2. 实时状态传送【1 参数不可用】
+// 	unsigned char err;
+// 	for(int i = 1; i < 5; i++)
+// 	{	
+// 		err = 0;
+// 		err = g_clsPrint->MW_RealTimeStatus(i);
+// 		printf("i = %d err = 0x%X\n", i, err);
 // 	}
 
-	//err = g_clsPrint->MW_RealTimeStatus(4);
+//     // 3. 设置字符右间距
+//  	g_clsPrint->MW_SetCharRightSpace(10);
+//     
+    // 4. 打印字符串
+    unsigned char err;
+    err = g_clsPrint->MW_PrintString(pString2);
+    printf("err = %d\n", err);
 
 
-	g_clsPrint->MW_PrintBitmap((unsigned char*)"Hello");
-	
-	for( int i = 0; i < 400000; i++);
 
+//////////////////////////////////////////////////////////
 	g_clsPrint->ClosePort();
 
 

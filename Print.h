@@ -14,8 +14,11 @@
 class CPrint : public CSerialPort  
 {
 public:
-	void MW_PrintBitmap(const unsigned char * pcPicAddr);
-	int MW_RealTimeStatus(int n);
+	int MW_SelectPrintMode(unsigned char mode);
+	int MW_PrintString(char * pcString);
+	int MW_SetCharRightSpace(unsigned char n);
+	int MW_PrintBitmap(char * pcPicAddr);
+	unsigned char MW_RealTimeStatus(unsigned char n);
 	void MW_LF(void);
 	CPrint();
 	virtual ~CPrint();
