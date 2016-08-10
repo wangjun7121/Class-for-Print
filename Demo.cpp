@@ -41,7 +41,7 @@ int main(int argc, char* argv[])
 // 		printf("i = %d err = 0x%X\n", i, err);
 // 	}
 
-//     // 3. 设置字符右间距，如 A B 变成 A    B
+//     // 3. 设置字符右间距，如 A B C 变成 A    B   C 
 //  	g_clsPrint->MW_SetCharRightSpace(10);
 //     
 //     // 4. 打印字符串
