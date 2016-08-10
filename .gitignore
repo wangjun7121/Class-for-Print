@@ -17,6 +17,11 @@
 *.dll
 *.ncb 
 *.opt
+*.bsc 
+*.ilk 
+*.pdb 
+*.idb 
+*.plg
 
 # Fortran module files
 *.mod
