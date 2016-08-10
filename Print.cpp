@@ -426,3 +426,28 @@ int CPrint::MW_SetAbsPrintPosition(int iPost)
     WriteToPort(cWriteBuf, 4);
 	return 0;
 }
+
+/**********************************************************************
+* 函数名称： MW_SetUndlineMode
+* 功能描述： 选择/取消下划线模式
+* 输入参数： ucMode 选择/取消下划线模式 
+                    值              功能 
+                    0,48            取消下划线模式
+                    1,49            选择下划线模式(1 点宽)
+                    2,50            选择下划线模式(2 点宽)
+* 输出参数： 无
+* 返 回 值： 成功返回 0 ，失败返回 -1
+* 其它说明： 
+***********************************************************************/
+int CPrint::MW_SetUndlineMode(unsigned char ucMode)
+{
+    if (ucMode < 0 || ucMode > 255)
+        return -1;
+    
+    unsigned char cWriteBuf[10];
+    cWriteBuf[0] = 0x1B;
+    cWriteBuf[1] = 0x2D;
+    cWriteBuf[2] = ucMode;
+    WriteToPort(cWriteBuf, 3);
+	return 0;
+}

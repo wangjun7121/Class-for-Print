@@ -52,7 +52,7 @@ int main(int argc, char* argv[])
 //     // 5. 打印模式选择
 //     unsigned char ucMode = 0;
 // 
-//     // (1 << 7) 下划线  : 没什么效果
+//     // (1 << 7) 下划线  : 没什么效果, 很淡
 //     // (1 << 5) 倍宽 
 //     // (1 << 4) 倍高 
 //     // (1 << 3) 加粗   
@@ -64,7 +64,16 @@ int main(int argc, char* argv[])
 //     g_clsPrint->MW_SetAbsPrintPosition(65500);
 //     g_clsPrint->MW_PrintString(pString2);
 
-
+//     // 7. 选择/取消下划线模式
+//     unsigned char ucMode = 2;
+//     // 0,48            取消下划线模式
+//     // 1,49            选择下划线模式(1 点宽)
+//     // 2,50            选择下划线模式(2 点宽)
+//     g_clsPrint->MW_SetUndlineMode(ucMode);
+//     ucMode = 0;
+//     ucMode |= (1 << 7)|(1 << 3); // (1 << 7) 下划线 
+//     g_clsPrint->MW_SelectPrintMode(ucMode); 
+//     g_clsPrint->MW_PrintString(pString2);
 
 //////////////////////////////////////////////////////////
 	g_clsPrint->ClosePort();
