@@ -14,6 +14,7 @@
 class CPrint : public CSerialPort  
 {
 public:
+	int MW_SetAbsPrintPosition(int iPost);
 	int MW_SelectPrintMode(unsigned char ucMode);
 	int MW_PrintString(char * pcString);
 	int MW_SetCharRightSpace(unsigned char n);

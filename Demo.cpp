@@ -19,7 +19,7 @@ char * pString = "-------------------------------\n"
 				"       满家福百货南邮店\n"
 				"小票：270500027721 收银员：01012\n"
 				"-------------------------------\n";
-char *pString2 = "123456789101112131415161718192021222324252627282930\n";
+char *pString2 = "1234567891011121314151617181920\n";
 
 int main(int argc, char* argv[])
 {
@@ -48,6 +48,21 @@ int main(int argc, char* argv[])
 //     unsigned char err;
 //     err = g_clsPrint->MW_PrintString(pString2);
 //     printf("err = %d\n", err);
+
+//     // 5. 打印模式选择
+//     unsigned char ucMode = 0;
+// 
+//     // (1 << 7) 下划线  : 没什么效果
+//     // (1 << 5) 倍宽 
+//     // (1 << 4) 倍高 
+//     // (1 << 3) 加粗   
+//     ucMode |= (1 << 3);
+//     g_clsPrint->MW_SelectPrintMode(ucMode);                                         
+//     g_clsPrint->MW_PrintString(pString2);
+
+//     // 6. 设置绝对打印位置 
+//     g_clsPrint->MW_SetAbsPrintPosition(65500);
+//     g_clsPrint->MW_PrintString(pString2);
 
 
 

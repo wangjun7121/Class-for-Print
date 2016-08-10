@@ -355,7 +355,7 @@ int CPrint::MW_PrintString(char *pcString)
     unsigned char err = MW_RealTimeStatus(4);
 
     
-    sprintf(tmp, "Printer Status 0x%X\n", err);
+    sprintf(tmp, "Printer error Status 0x%X\n", err);
     if (0x12 != err)
     {
         fputs (tmp, stderr); 
@@ -372,15 +372,28 @@ int CPrint::MW_PrintString(char *pcString)
 /**********************************************************************
 * 函数名称： MW_SelectPrintMode
 * 功能描述： 选择打印模式
-* 输入参数： mode
+* 输入参数： ucMode 打印模式                   0 <= ucmode <= 255
+                位  1/0     十六进制码  十进制码    功能
+                0   0       00          0           标准 ASCII 码字体(12x24)
+                    1       01          1           压缩 ASCII 码字体(9x17)
+                1/2 -       --          -           未定义
+                3   0       00          0           取消加粗模式 
+                    1       08          8           选择加粗模式
+                4   0       00          0           取消倍高模式
+                    1       10          16          选择倍高模式
+                5   0       00          0           取消倍宽模式
+                    1       20          32          选择倍宽模式
+                6   -       --          --          --
+                7   0       00          0           取消下划线模式
+                    1       80          128         选择下划线模式
+
 * 输出参数： 无
 * 返 回 值： 0 成功，失败返回 -1
-* 其它说明： 字符以换行结束才会被打印出来，对于不是以换行结尾的字符串，
-                程序会自动添加换行打印出来。
+* 其它说明： 
 ***********************************************************************/
 int CPrint::MW_SelectPrintMode(unsigned char ucMode)
 {
-    if (ucMode <= 0 || ucMode >=255 )
+    if (ucMode < 0 || ucMode > 255)
         return -1;
     
     unsigned char cWriteBuf[10];
@@ -388,5 +401,28 @@ int CPrint::MW_SelectPrintMode(unsigned char ucMode)
     cWriteBuf[1] = 0x21;
     cWriteBuf[2] = ucMode;
     WriteToPort(cWriteBuf, 3);
+	return 0;
+}
+
+/**********************************************************************
+* 函数名称： MW_SetAbsPrintPosition
+* 功能描述： 设置绝对打印位置
+* 输入参数： iPost 当前位置距离行首距离
+* 输出参数： 无
+* 返 回 值： 成功返回 0 ，失败返回 -1
+* 其它说明： 
+***********************************************************************/
+int CPrint::MW_SetAbsPrintPosition(int iPost)
+{
+    unsigned char nL,nH;
+    nL = iPost % 255;
+    nH = iPost / 255;
+
+    unsigned char cWriteBuf[10];
+    cWriteBuf[0] = 0x1B;
+    cWriteBuf[1] = 0x24;
+    cWriteBuf[2] = nL;
+    cWriteBuf[3] = nH;
+    WriteToPort(cWriteBuf, 4);
 	return 0;
 }
