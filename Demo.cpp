@@ -20,7 +20,7 @@ char * pString = "-------------------------------\n"
 				"小票：270500027721 收银员：01012\n"
 				"-------------------------------\n";
 char *pString2 = "1234567891011121314151617181920\n";
-
+char *pString3 = "123456789\n";
 int main(int argc, char* argv[])
 {
 
@@ -42,7 +42,7 @@ int main(int argc, char* argv[])
 // 	}
 
 //     // 3. 设置字符右间距，如 A B C 变成 A    B   C 
-//  	g_clsPrint->MW_SetCharRightSpace(10);
+//      g_clsPrint->MW_SetCharRightSpace(10);
 //     
 //     // 4. 打印字符串
 //     unsigned char err;
@@ -74,6 +74,25 @@ int main(int argc, char* argv[])
 //     ucMode |= (1 << 7)|(1 << 3); // (1 << 7) 下划线 
 //     g_clsPrint->MW_SelectPrintMode(ucMode); 
 //     g_clsPrint->MW_PrintString(pString2);
+
+//     // 8. 设置行间距 
+//     g_clsPrint->MW_PrintString(pString2);
+//     g_clsPrint->MW_SetLineSpace(200);
+//     g_clsPrint->MW_PrintString(pString2);
+//     g_clsPrint->MW_SetDefaultLineSpace();
+//     g_clsPrint->MW_PrintString(pString2);
+    
+//     // 9. 选择对齐方式
+//     g_clsPrint->MW_SelectAlignMode(1);
+//     g_clsPrint->MW_PrintString(pString3);
+// 
+//     g_clsPrint->MW_SelectAlignMode(2);
+//     g_clsPrint->MW_PrintString(pString3);
+// 
+//     g_clsPrint->MW_SelectAlignMode(0);
+//     g_clsPrint->MW_PrintString(pString3);
+
+
 
 //////////////////////////////////////////////////////////
 	g_clsPrint->ClosePort();

@@ -451,3 +451,145 @@ int CPrint::MW_SetUndlineMode(unsigned char ucMode)
     WriteToPort(cWriteBuf, 3);
 	return 0;
 }
+
+/**********************************************************************
+* 函数名称： MW_SetDefaultLineSpace
+* 功能描述： 设置默认行间距
+* 输入参数： 选择约 3.75mm 行间距
+* 输出参数： 无
+* 返 回 值： 成功返回 0 ，失败返回 -1
+* 其它说明： 
+***********************************************************************/
+int CPrint::MW_SetDefaultLineSpace(void)
+{
+    unsigned char cWriteBuf[10];
+    cWriteBuf[0] = 0x1B;
+    cWriteBuf[1] = 0x32;
+    WriteToPort(cWriteBuf, 2);
+	return 0;
+}
+
+/**********************************************************************
+* 函数名称： MW_SetLineSpace
+* 功能描述： 设置行间距
+* 输入参数： 设置行间距为 n x 纵向或横向移动单位 英寸
+* 输出参数： 无
+* 返 回 值： 成功返回 0 ，失败返回 -1
+* 其它说明： 
+***********************************************************************/
+int CPrint::MW_SetLineSpace(unsigned char n)
+{
+    if (n < 0 || n > 255)
+        return -1;
+    
+    unsigned char cWriteBuf[10];
+    cWriteBuf[0] = 0x1B;
+    cWriteBuf[1] = 0x33;
+    cWriteBuf[2] = n;
+    WriteToPort(cWriteBuf, 3);
+	return 0;
+}
+
+/**********************************************************************
+* 函数名称： MW_InitPrint
+* 功能描述： 实始化打印机，清除打印机缓冲区数据，打印模式被设为上电时的默认值模式
+* 输入参数： 无
+* 输出参数： 无
+* 返 回 值： 成功返回 0 ，失败返回 -1
+* 其它说明： 
+***********************************************************************/
+int CPrint::MW_InitPrint()
+{
+    unsigned char cWriteBuf[10];
+    cWriteBuf[0] = 0x1B;
+    cWriteBuf[1] = 0x40;
+    WriteToPort(cWriteBuf, 2);
+	return 0;
+}
+
+
+/**********************************************************************
+* 函数名称： MW_SetBoldMode
+* 功能描述： 选择/取消加粗模式
+* 输入参数： n， 0 取消加粗模式，
+                 1 选择加粗模式
+* 输出参数： 无
+* 返 回 值： 成功返回 0 ，失败返回 -1
+* 其它说明： 
+***********************************************************************/
+int CPrint::MW_SetBoldMode(unsigned char n)
+{
+    if ( (0 != n) && (1 != n))
+    {
+        return -1;
+    }
+    unsigned char cWriteBuf[10];
+    cWriteBuf[0] = 0x1B;
+    cWriteBuf[1] = 0x45;
+    cWriteBuf[2] = n;
+    WriteToPort(cWriteBuf, 3);
+	return 0;
+}
+
+/**********************************************************************
+* 函数名称： MW_SelecAsciiFont
+* 功能描述： 选择字体 
+* 输入参数： n， 0,48 选择标准 ASCII 码字体(12x24)
+                 1,49 选择压缩 ASCII 码字体(9x17)
+* 输出参数： 无
+* 返 回 值： 成功返回 0 ，失败返回 -1
+* 其它说明： 
+***********************************************************************/
+int CPrint::MW_SelecAsciiFont(unsigned char n)
+{
+    unsigned char cWriteBuf[10];
+    cWriteBuf[0] = 0x1B;
+    cWriteBuf[1] = 0x4D;
+    cWriteBuf[2] = n;
+    WriteToPort(cWriteBuf, 3);
+	return 0;
+}
+
+/**********************************************************************
+* 函数名称： MW_SetRefPrintPosition
+* 功能描述： 设置相对横向打印位置
+* 输入参数： iPost 当前位置距离行首距离
+* 输出参数： 无
+* 返 回 值： 成功返回 0 ，失败返回 -1
+* 其它说明： 
+***********************************************************************/
+int CPrint::MW_SetRefPrintPosition(int iPost)
+{
+    unsigned char nL,nH;
+    nL = iPost % 255;
+    nH = iPost / 255;
+    
+    unsigned char cWriteBuf[10];
+    cWriteBuf[0] = 0x1B;
+    cWriteBuf[1] = 0x5C;
+    cWriteBuf[2] = nL;
+    cWriteBuf[3] = nH;
+    WriteToPort(cWriteBuf, 4);
+	return 0;
+}
+
+/**********************************************************************
+* 函数名称： MW_SelectAlignMode
+* 功能描述： 设置对齐方式
+* 输入参数： n: 0,48    左对齐
+                1,49    中间对齐
+                2,50    右对齐 
+
+* 输出参数： 无
+* 返 回 值： 成功返回 0 ，失败返回 -1
+* 其它说明： 
+***********************************************************************/
+int CPrint::MW_SelectAlignMode(unsigned char n)
+{
+    unsigned char cWriteBuf[10];
+    cWriteBuf[0] = 0x1B;
+    cWriteBuf[1] = 0x61;
+    cWriteBuf[2] = n;
+    WriteToPort(cWriteBuf, 3);
+	return 0;
+}

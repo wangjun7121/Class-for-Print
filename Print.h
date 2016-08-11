@@ -14,6 +14,13 @@
 class CPrint : public CSerialPort  
 {
 public:
+	int MW_SelectAlignMode(unsigned char n);
+	int MW_SetRefPrintPosition(int iPost);
+	int MW_SelecAsciiFont(unsigned char n);
+	int MW_SetBoldMode(unsigned char n);
+	int MW_InitPrint(void);
+	int MW_SetLineSpace(unsigned char n);
+	int MW_SetDefaultLineSpace(void);
 	int MW_SetUndlineMode(unsigned char ucMode);
 	int MW_SetAbsPrintPosition(int iPost);
 	int MW_SelectPrintMode(unsigned char ucMode);
