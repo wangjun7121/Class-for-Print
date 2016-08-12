@@ -649,9 +649,9 @@ int CPrint::MW_DownloadBitmapToFlash(char *pcBitmapAddr)
 	int iBMPBpp;
 	int iLineWidthAlign;
 	int iLineWidthReal;
-	int iCurBlue;
-	int iCurLine;
-	unsigned char ucaData[20] = {0};
+	int iCurBlue;  // 当前 RGB 中的蓝色值 
+//	int iCurLine;
+	unsigned char ucaData[10] = {0};
 	unsigned char *pucSrc; // 指向图片数据
 
 // 	//设置字符行间距为 0 点行
@@ -659,135 +659,127 @@ int CPrint::MW_DownloadBitmapToFlash(char *pcBitmapAddr)
 //  	WriteToPort(data, sizeof(data));
 
 	// FS q m xL xH yL yH d1…dk   定义 Flash 位图
-	// k = (xL + xH * 256) * (yL + yH * 256) * 8 // 8 是一个字节 8 位
+	// k = (xL + xH * 256) * (yL + yH * 256) * 8 
 	unsigned char escBmp[] = { 0x1C, 0x71, 0x01, 0x00, 0x00, 0x00, 0x00 };
     
-    //////////////////////////////////////////////////////////
-    // 1. DownLoad to Flash Test
-    // 可用的测试样例：[x= 横向字节数 y = 竖向字节数]
-    //               xL XH yL yH
-    //      1C 71 01 01 00 01 00 FF 00 FF 00 00 FF 00 FF
-    //      1C 70 01 03
-    escBmp[0] = 0x1C;
-    escBmp[1] = 0x71;
-    escBmp[2] = 0x01;
+//     //////////////////////////////////////////////////////////
+//     // 1. DownLoad to Flash Test
+//     // 可用的测试样例：[x= 横向字节数 y = 竖向字节数]
+//     //               xL XH yL yH
+//     //      1C 71 01 01 00 01 00 FF 00 FF 00 00 FF 00 FF
+//     //      1C 70 01 03
+//     escBmp[0] = 0x1C;
+//     escBmp[1] = 0x71;
+//     escBmp[2] = 0x01;
+// 
+//     escBmp[3] = 0x01;
+//     escBmp[4] = 0x00;
+// 
+//     escBmp[5] = 0x01;
+//     escBmp[6] = 0x00;
+//     WriteToPort(escBmp, 7);
+// 
+//     // 数据
+//     ucaData[0] = 0xFF;
+//     ucaData[1] = 0x81;
+//     ucaData[2] = 0x81;
+//     ucaData[3] = 0x81;
+//     ucaData[4] = 0x81;
+//     ucaData[5] = 0x81;
+//     ucaData[6] = 0x81;
+//     ucaData[7] = 0xFF;
+//     WriteToPort(ucaData, 8);
+// 
+//     Sleep(10000);
+//     //MW_InitPrint();
+//     escBmp[0] = 0x1C;
+//     escBmp[1] = 0x70;
+//     escBmp[2] = 0x01;
+//     escBmp[3] = 0x03;
+//     WriteToPort(escBmp, 4);
+// 
+//     //////////////////////////////////////////////////////////
 
-    escBmp[3] = 0x01;
-    escBmp[4] = 0x00;
+	//xL, xH
+    long tmpX = (ptBitmapH->biWidth + 7) / 8; 
+	escBmp[3] = (unsigned char)(tmpX % 256);
+	escBmp[4] = (unsigned char)(tmpX / 256);
+	
+    //yL, yH
+    long tmpY = (ptBitmapH->biHeight + 7) / 8; 
+    escBmp[5] = (unsigned char)(tmpY % 256);
+	escBmp[6] = (unsigned char)(tmpY / 256);
 
-    escBmp[5] = 0x01;
-    escBmp[6] = 0x00;
+    unsigned char * pucFlashData;
+    int iFlastDataNum = (tmpY * tmpY * 8);
+    pucFlashData = (unsigned char*) calloc (iFlastDataNum, sizeof(unsigned char));  
+
+	iWidth = ptBitmapH->biWidth;
+	iHeight = ptBitmapH->biHeight;
+	iBMPBpp = ptBitmapH->biBitCount;
+	
+	iLineWidthReal = iWidth * iBMPBpp / 8;
+	iLineWidthAlign = (iLineWidthReal + 3) & ~0x3;   // 向 4 取整 
+	
+	
+
+	pucSrc = pucBuffer + ptBitmap->bfOffBits; // 指向图片左下, 即资源开始的地方 
+    //pucSrc = pucSrc + (iHeight - 1) * iLineWidthAlign; 
+    
+    int iCurFlashByte; // 当前 Flash 字节位置
+    int iColBytesNum;
+    iColBytesNum = (iHeight + 7) / 8;
+
+    for (int x = 0; x < iWidth; x++) // 第几列
+    {
+        //for (int y = 0; y < iColBytesNum; y++) // 当前列第几个字节    未颠倒
+        for (int y = iColBytesNum; y > 0; y--) // 当前列第几个字节
+        {
+            // Flash 中当前字节 = x * (iHeight / 8 + 1) + y = 当前列 * 每列字节数 + 当前所在列第几个字节
+            iCurFlashByte = x * iColBytesNum + y - 1;
+
+            for (int z = 0; z < 8; z++) // 当前字节内第几位
+            {
+                // 当前字节位置的颜色 = 对应的图像字节颜色
+                
+                // 当前 Flash 点位位置 = z + y * 8 + x * (iHeight / 8 + 1) * 8 = 当前字节内位置 + 前面列位数 + 前面行位数
+
+                // 进行 4 字节对齐后的像素位置 = 所在行 * 对齐后的列宽 + 所在列 * 3（24 位深）
+                // 当前图像中对应蓝色像素字节位置 
+                //iCurBlue = (z + y * 8) * iLineWidthAlign + x * 3;             // 未颠倒
+                iCurBlue = ((iHeight - 1) - ((7 - z) + (y -1) * 8)) * iLineWidthAlign + x * 3; 
+
+                if (pucSrc[iCurBlue] != 0xFF ) // 0x00 0x00 0x00 表示黑色，0xFF 0xFF 0xFF 表示白色
+                {
+                    //pucFlashData[iCurFlashByte] |= (1 << (7 - z));            // 未颠倒
+                    pucFlashData[iCurFlashByte] |= (1 << z);
+                }
+               
+
+            }
+        }
+    }
+    
+    for ( x = 0; x < iFlastDataNum; x++)
+    {
+        printf("0x%02X ", pucFlashData[x]);
+        if (8 == x)
+        {
+            printf("\n");
+        }
+    }
+    printf("\n");
+
     WriteToPort(escBmp, 7);
-
-    // 数据
-    ucaData[0] = 0xFF;
-    ucaData[1] = 0x81;
-    ucaData[2] = 0x81;
-    ucaData[3] = 0x81;
-    ucaData[4] = 0x81;
-    ucaData[5] = 0x81;
-    ucaData[6] = 0x81;
-    ucaData[7] = 0xFF;
-    WriteToPort(ucaData, 8);
-
+    WriteToPort(pucFlashData, iFlastDataNum);
     Sleep(10000);
-    //MW_InitPrint();
     escBmp[0] = 0x1C;
     escBmp[1] = 0x70;
     escBmp[2] = 0x01;
     escBmp[3] = 0x03;
     WriteToPort(escBmp, 4);
 
-    //////////////////////////////////////////////////////////
-
-// 	//nL, nH
-// 	escBmp[3] = (unsigned char)(ptBitmapH->biWidth % 256);
-// 	escBmp[4] = (unsigned char)(ptBitmapH->biWidth / 256);
-	
-// 	iWidth = ptBitmapH->biWidth;
-// 	iHeight = ptBitmapH->biHeight;
-// 	iBMPBpp = ptBitmapH->biBitCount;
-// 	
-// 	iLineWidthReal = iWidth * iBMPBpp / 8;
-// 	iLineWidthAlign = (iLineWidthReal + 3) & ~0x3;   // 向 4 取整 
-// 	
-// 	
-// 
-// 	pucSrc = pucBuffer + ptBitmap->bfOffBits; // 指向图片左下
-//     //pucSrc = pucSrc + (iHeight - 1) * iLineWidthAlign; 
-// 
-// 
-// //	for (int y = 0; y < (iHeight / 24 + 1); y++)// 循环组，每 24 行一组 + 1 处理最后一组
-//     // 图片旋转，处理组也从 左下 0 至 (iHeight / 24 + 1) 变成  (iHeight / 24 + 1) 至0
-// 	for (int y = (iHeight / 24); y >=0 ; y--)// 循环组，每 24 行一组 + 1 处理最后一组
-// 	{	
-// 		WriteToPort(escBmp, 5);
-// 		for (int x = 0; x < iWidth; x++)// 循环列，每列3字节
-// 		{
-// 			ucaData[0] = 0x00;
-// 			ucaData[1] = 0x00;
-// 			ucaData[2] = 0x00;
-// 			for (int z = 0; z < 24; z++) // 循环每列字节位
-// 			{
-// 				//当前像素点标号(从 0 开始) = 第几位 * 每行像素数 + 本行第向个像素 + 第几组 * 组行数 * 每行像素数 =(z * iWidth + x + y * 8 * iWidth);
-// 				//iCurPiexl = (z * iWidth + x + y * 24 * iWidth);
-// 
-// 				// 所在行 = 当前第几位 + 当前组 * 组成员个数
-// 				iCurLine = z + y * 24;
-// 
-// 
-// 				// 判断是还在当前位图中 
-// 				if (iCurLine < iHeight)
-// 				{
-// 					// iCurPiexl / iWidth = 所在行 = 当前第几位 + 当前组 * 组成员个数
-// 					// iCurPiexl % iWidth = 所在列 = x
-// 
-// 					// 进行 4 字节对齐后的像素位置 = 所在行 * 对齐后的列宽 + 所在列 * 3（24 位深）
-// 					iCurBlue = iCurLine * iLineWidthAlign + ( x * 3); // (iWidth - x - 1) 行数据颠倒
-// 					if (pucSrc[iCurBlue] != 0xFF ) // 0x00 0x00 0x00 表示黑色，0xFF 0xFF 0xFF 表示白色
-// 					{
-// //                         if ( z < 8)
-// //                         {
-// //                             ucaData[0] |= (1 << (7-z));
-// //                         }
-// //                         else
-// //                             if ( (z >= 8) && (z < 16) )
-// //                         {
-// //                             ucaData[1] |= (1 << (15-z));
-// //                         }
-// //                         else
-// //                             if((z >= 16) && (z < 24))
-// //                         {
-// //                             ucaData[2] |= (1 << (23-z));
-// //                         }
-// 
-//                         // 图片旋转, 原来是 ucaData[0-2] = 0 - 24 位，现在要变成 ucaData[0-2] = 24-0
-//                         if ( z < 8)
-//                         {
-//                             ucaData[2] |= (1 << (z));
-//                         }
-//                         else
-//                             if ( (z >= 8) && (z < 16) )
-//                         {
-//                             ucaData[1] |= (1 << (z - 8));
-//                         }
-//                         else
-//                             if((z >= 16) && (z < 24))
-//                         {
-//                             ucaData[0] |= (1 << (z - 16));
-//                         }
-// 						
-// 						
-// 					}
-// 				}	
-// 			}
-//                        
-// 			WriteToPort(ucaData, 3);
-// 		}
-// 		MW_LF();
-// 	}
-
-
+    free(pucFlashData);
 	/////////////////////////////////////////////////////////////////////////
     /* 结束演示，关闭文件并释放内存 */  
     fclose (pFile);  

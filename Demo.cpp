@@ -93,7 +93,7 @@ int main(int argc, char* argv[])
 //     g_clsPrint->MW_PrintString(pString3);
 
     // 10， 下载/打印 Flash 中的位图 
-    g_clsPrint->MW_DownloadBitmapToFlash("D:\\VC_Project\\Demo\\熊猫.bmp");
+    g_clsPrint->MW_DownloadBitmapToFlash("D:\\VC_Project\\Demo\\Bitmap_中国.bmp");
 
 //////////////////////////////////////////////////////////
 	g_clsPrint->ClosePort();

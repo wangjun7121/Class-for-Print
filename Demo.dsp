@@ -138,6 +138,14 @@ SOURCE=.\Bitmap48x48.bmp
 # End Source File
 # Begin Source File
 
+SOURCE=.\Bitmap5x5.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Bitmap8x8.bmp
+# End Source File
+# Begin Source File
+
 SOURCE=".\Bitmap_ÖÐ¹ú.bmp"
 # End Source File
 # End Group
