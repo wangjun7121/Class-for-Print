@@ -14,6 +14,7 @@
 class CPrint : public CSerialPort  
 {
 public:
+	int MW_PrintFlashBitmap(unsigned char n);
 	int MW_DownloadBitmapToFlash(char *pcBitmapAddr);
 	int MW_SelectAlignMode(unsigned char n);
 	int MW_SetRefPrintPosition(int iPost);
@@ -23,7 +24,7 @@ public:
 	int MW_SetLineSpace(unsigned char n);
 	int MW_SetDefaultLineSpace(void);
 	int MW_SetUndlineMode(unsigned char ucMode);
-	int MW_SetAbsPrintPosition(int iPost);
+	int MW_SetAbsPrintPosition(unsigned int iPost);
 	int MW_SelectPrintMode(unsigned char ucMode);
 	int MW_PrintString(char * pcString);
 	int MW_SetCharRightSpace(unsigned char n);
@@ -33,6 +34,8 @@ public:
 	CPrint();
 	virtual ~CPrint();
 
+private:
+	int GetPrintStatus();
 };
 
 #endif // !defined(AFX_PRINT_H__9E45703F_368A_4A8A_A766_D1D4A87A9464__INCLUDED_)

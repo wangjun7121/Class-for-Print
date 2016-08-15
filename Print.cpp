@@ -8,6 +8,7 @@
 using namespace std;
 
 
+
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
@@ -21,6 +22,43 @@ CPrint::~CPrint()
 {
 
 }
+/////////////////////////////////////////////////////////////////////////
+// Private Function
+/////////////////////////////////////////////////////////////////////////
+/**********************************************************************
+* 函数名称： GetPrintStatus
+* 功能描述： 用于在打印时判断打印机状态
+* 输入参数： 无
+* 输出参数： 无
+* 返 回 值： 成功返回 0 ，失败返回 -1
+* 其它说明： 无
+***********************************************************************/
+int CPrint::GetPrintStatus()
+{
+    char tmp[100];
+    unsigned char err = MW_RealTimeStatus(4);
+    
+    sprintf(tmp, "Printer error Status 0x%X\n", err);
+    if (0x12 != err)
+    {
+        fputs (tmp, stderr); 
+        return -1;
+    }
+    return 0;
+}
+
+
+
+
+
+
+
+
+
+/////////////////////////////////////////////////////////////////////////
+// Public Function
+/////////////////////////////////////////////////////////////////////////
+
 /**********************************************************************
 * 函数名称： MW_LF
 * 功能描述： 换行
@@ -98,10 +136,13 @@ void CPrint::MW_LF()
 ***********************************************************************/
 unsigned char CPrint::MW_RealTimeStatus(unsigned char n)
 {
+    if (n < 1 || n > 4 )
+    {
+        fputs ("invalid argument!\n",stderr);
+        return -1;
+    }
 	unsigned char cWriteBuf[3];
 	char cReadBuf[1];
-	if((n > 4)||(n < 1))
-		return -1;
 	
 	cWriteBuf[0] = 0x10;
 	cWriteBuf[1] = 0x04;
@@ -122,7 +163,9 @@ unsigned char CPrint::MW_RealTimeStatus(unsigned char n)
 ***********************************************************************/
 int CPrint::MW_PrintBitmap(char *pcPicAddr)
 {
- 
+    if (GetPrintStatus() != 0)
+        return -1;
+
 	FILE * pFile;  
     long lSize;  
     unsigned char * pucBuffer;  
@@ -318,16 +361,18 @@ int CPrint::MW_PrintBitmap(char *pcPicAddr)
 /**********************************************************************
 * 函数名称： MW_SetCharRightSpace
 * 功能描述： 设置打印字符右边距
-* 输入参数： n 表示右边距为 [ n * 横向移动单位或纵向移动单位]英寸
+* 输入参数： n 表示右边距为 [ n * 横向移动单位或纵向移动单位]英寸 (0 <= n <= 255)
 * 输出参数： 无
 * 返 回 值： 无
 * 其它说明：
 ***********************************************************************/
 int CPrint::MW_SetCharRightSpace(unsigned char n)
 {
-	if (n <= 0 || n >=255 )
-		return -1;
-
+    if (n < 0 || n > 255 )
+    {
+        fputs ("invalid argument!\n",stderr);
+        return -1;
+    }
 	unsigned char cWriteBuf[10];
 	cWriteBuf[0] = 0x1B;
 	cWriteBuf[1] = 0x20;
@@ -348,20 +393,10 @@ int CPrint::MW_SetCharRightSpace(unsigned char n)
 ***********************************************************************/
 int CPrint::MW_PrintString(char *pcString)
 {
-    //fputs ("Reading error",stderr); 
-
-	int iByteSent;
-    char tmp[100];
-    //string sErr;
-    unsigned char err = MW_RealTimeStatus(4);
-
-    
-    sprintf(tmp, "Printer error Status 0x%X\n", err);
-    if (0x12 != err)
-    {
-        fputs (tmp, stderr); 
+    if (GetPrintStatus() != 0)
         return -1;
-    }
+	int iByteSent;
+
 	iByteSent = WriteToPort((unsigned char*)pcString, strlen(pcString));
     if (pcString[iByteSent-1] != 0x0a)
     {
@@ -394,8 +429,11 @@ int CPrint::MW_PrintString(char *pcString)
 ***********************************************************************/
 int CPrint::MW_SelectPrintMode(unsigned char ucMode)
 {
-    if (ucMode < 0 || ucMode > 255)
+    if (ucMode < 0 || ucMode > 255 )
+    {
+        fputs ("invalid argument!\n",stderr);
         return -1;
+    }
     
     unsigned char cWriteBuf[10];
     cWriteBuf[0] = 0x1B;
@@ -408,12 +446,12 @@ int CPrint::MW_SelectPrintMode(unsigned char ucMode)
 /**********************************************************************
 * 函数名称： MW_SetAbsPrintPosition
 * 功能描述： 设置绝对打印位置
-* 输入参数： iPost 当前位置距离行首距离
+* 输入参数： iPost 当前位置距离行首距离 (0 <= iPost <=65535)
 * 输出参数： 无
 * 返 回 值： 成功返回 0 ，失败返回 -1
 * 其它说明： 
 ***********************************************************************/
-int CPrint::MW_SetAbsPrintPosition(int iPost)
+int CPrint::MW_SetAbsPrintPosition(unsigned int iPost)
 {
     unsigned char nL,nH;
     nL = iPost % 255;
@@ -433,17 +471,20 @@ int CPrint::MW_SetAbsPrintPosition(int iPost)
 * 功能描述： 选择/取消下划线模式
 * 输入参数： ucMode 选择/取消下划线模式 
                     值              功能 
-                    0,48            取消下划线模式
-                    1,49            选择下划线模式(1 点宽)
-                    2,50            选择下划线模式(2 点宽)
+                    0            取消下划线模式
+                    1            选择下划线模式(1 点宽)
+                    2            选择下划线模式(2 点宽)
 * 输出参数： 无
 * 返 回 值： 成功返回 0 ，失败返回 -1
 * 其它说明： 
 ***********************************************************************/
 int CPrint::MW_SetUndlineMode(unsigned char ucMode)
 {
-    if (ucMode < 0 || ucMode > 255)
+    if (ucMode < 0 || ucMode > 2 )
+    {
+        fputs ("invalid argument!\n",stderr);
         return -1;
+    }
     
     unsigned char cWriteBuf[10];
     cWriteBuf[0] = 0x1B;
@@ -473,16 +514,18 @@ int CPrint::MW_SetDefaultLineSpace(void)
 /**********************************************************************
 * 函数名称： MW_SetLineSpace
 * 功能描述： 设置行间距
-* 输入参数： 设置行间距为 n x 纵向或横向移动单位 英寸
+* 输入参数： 设置行间距为 n x 纵向或横向移动单位 英寸   (0 <= n <= 255)
 * 输出参数： 无
 * 返 回 值： 成功返回 0 ，失败返回 -1
 * 其它说明： 
 ***********************************************************************/
 int CPrint::MW_SetLineSpace(unsigned char n)
 {
-    if (n < 0 || n > 255)
+    if (n < 0 || n > 255 )
+    {
+        fputs ("invalid argument!\n",stderr);
         return -1;
-    
+    }
     unsigned char cWriteBuf[10];
     cWriteBuf[0] = 0x1B;
     cWriteBuf[1] = 0x33;
@@ -520,8 +563,9 @@ int CPrint::MW_InitPrint()
 ***********************************************************************/
 int CPrint::MW_SetBoldMode(unsigned char n)
 {
-    if ( (0 != n) && (1 != n))
+    if (n < 0 || n > 1 )
     {
+        fputs ("invalid argument!\n",stderr);
         return -1;
     }
     unsigned char cWriteBuf[10];
@@ -535,14 +579,19 @@ int CPrint::MW_SetBoldMode(unsigned char n)
 /**********************************************************************
 * 函数名称： MW_SelecAsciiFont
 * 功能描述： 选择字体 
-* 输入参数： n， 0,48 选择标准 ASCII 码字体(12x24)
-                 1,49 选择压缩 ASCII 码字体(9x17)
+* 输入参数： n， 0 选择标准 ASCII 码字体(12x24)
+                 1 选择压缩 ASCII 码字体(9x17)
 * 输出参数： 无
 * 返 回 值： 成功返回 0 ，失败返回 -1
 * 其它说明： 
 ***********************************************************************/
 int CPrint::MW_SelecAsciiFont(unsigned char n)
 {
+    if (n < 0 || n > 1 )
+    {
+        fputs ("invalid argument!\n",stderr);
+        return -1;
+    }
     unsigned char cWriteBuf[10];
     cWriteBuf[0] = 0x1B;
     cWriteBuf[1] = 0x4D;
@@ -577,9 +626,9 @@ int CPrint::MW_SetRefPrintPosition(int iPost)
 /**********************************************************************
 * 函数名称： MW_SelectAlignMode
 * 功能描述： 设置对齐方式
-* 输入参数： n: 0,48    左对齐
-                1,49    中间对齐
-                2,50    右对齐 
+* 输入参数： n: 0    左对齐
+                1    中间对齐
+                2    右对齐 
 
 * 输出参数： 无
 * 返 回 值： 成功返回 0 ，失败返回 -1
@@ -609,7 +658,6 @@ int CPrint::MW_SelectAlignMode(unsigned char n)
 int CPrint::MW_DownloadBitmapToFlash(char *pcBitmapAddr)
 {
 
- 
 	FILE * pFile;  
     long lSize;  
     unsigned char * pucBuffer;  
@@ -730,26 +778,11 @@ int CPrint::MW_DownloadBitmapToFlash(char *pcBitmapAddr)
         }
     }
     
-    for ( x = 0; x < iFlashDataNum; x++)
-    {
-        printf("0x%02X ", pucFlashData[x]);
-        if (8 == x)
-        {
-            printf("\n");
-        }
-    }
-    printf("\n");
-
-    printf("tmpX = %d tmpY = %d iFlashDataNum = %d\n",tmpX, tmpY, iFlashDataNum);
+    // printf("tmpX = %d tmpY = %d iFlashDataNum = %d\n",tmpX, tmpY, iFlashDataNum);
 
     WriteToPort(escBmp, 7);
     WriteToPort(pucFlashData, iFlashDataNum);
     Sleep(10000);
-    escBmp[0] = 0x1C;
-    escBmp[1] = 0x70;
-    escBmp[2] = 0x01;
-    escBmp[3] = 0x00;
-    WriteToPort(escBmp, 4);
 
     free(pucFlashData);
 	/////////////////////////////////////////////////////////////////////////
@@ -757,4 +790,35 @@ int CPrint::MW_DownloadBitmapToFlash(char *pcBitmapAddr)
     fclose (pFile);  
     free (pucBuffer);  
     return 0; 
+}
+/**********************************************************************
+* 函数名称： MW_PrintFlashBitmap
+* 功能描述： 打印 Flash 中的位图
+* 输入参数： n 为打印模式             (0 <= n <= 3)
+                            n   模式 
+                            0   正常
+                            1   倍宽
+                            2   倍高
+                            3   倍宽、倍高 
+* 输出参数： 无
+* 返 回 值： 成功返回 0 ，失败返回 -1
+* 其它说明： 
+***********************************************************************/
+int CPrint::MW_PrintFlashBitmap(unsigned char n)
+{
+    if (n < 0 || n > 3 )
+    {
+        fputs ("invalid argument!\n",stderr);
+		return -1;
+    }
+    if (GetPrintStatus() != 0)
+        return -1;
+	unsigned char escBmp[] = { 0x1C, 0x71, 0x01, 0x00, 0x00, 0x00, 0x00 };
+    escBmp[0] = 0x1C;
+    escBmp[1] = 0x70;
+    escBmp[2] = 0x01;
+    escBmp[3] = 0x00;
+    WriteToPort(escBmp, 4);
+    return 0;
+
 }
