@@ -136,7 +136,7 @@ void CPrint::MW_LF()
 ***********************************************************************/
 unsigned char CPrint::MW_RealTimeStatus(unsigned char n)
 {
-    if (n < 1 || n > 4 )
+    if ((n < 1) || (n > 4))
     {
         fputs ("invalid argument!\n",stderr);
         return -1;
@@ -368,7 +368,7 @@ int CPrint::MW_PrintBitmap(char *pcPicAddr)
 ***********************************************************************/
 int CPrint::MW_SetCharRightSpace(unsigned char n)
 {
-    if (n < 0 || n > 255 )
+    if ((n < 0) || (n > 255))
     {
         fputs ("invalid argument!\n",stderr);
         return -1;
@@ -429,7 +429,7 @@ int CPrint::MW_PrintString(char *pcString)
 ***********************************************************************/
 int CPrint::MW_SelectPrintMode(unsigned char ucMode)
 {
-    if (ucMode < 0 || ucMode > 255 )
+    if ((ucMode < 0) || (ucMode > 255))
     {
         fputs ("invalid argument!\n",stderr);
         return -1;
@@ -454,8 +454,8 @@ int CPrint::MW_SelectPrintMode(unsigned char ucMode)
 int CPrint::MW_SetAbsPrintPosition(unsigned int iPost)
 {
     unsigned char nL,nH;
-    nL = iPost % 255;
-    nH = iPost / 255;
+    nL = iPost % 256;
+    nH = iPost / 256;
 
     unsigned char cWriteBuf[10];
     cWriteBuf[0] = 0x1B;
@@ -480,7 +480,7 @@ int CPrint::MW_SetAbsPrintPosition(unsigned int iPost)
 ***********************************************************************/
 int CPrint::MW_SetUndlineMode(unsigned char ucMode)
 {
-    if (ucMode < 0 || ucMode > 2 )
+    if ((ucMode < 0) || (ucMode > 2) )
     {
         fputs ("invalid argument!\n",stderr);
         return -1;
@@ -521,7 +521,7 @@ int CPrint::MW_SetDefaultLineSpace(void)
 ***********************************************************************/
 int CPrint::MW_SetLineSpace(unsigned char n)
 {
-    if (n < 0 || n > 255 )
+    if ((n < 0) || (n > 255))
     {
         fputs ("invalid argument!\n",stderr);
         return -1;
@@ -563,7 +563,7 @@ int CPrint::MW_InitPrint()
 ***********************************************************************/
 int CPrint::MW_SetBoldMode(unsigned char n)
 {
-    if (n < 0 || n > 1 )
+    if ((n < 0) || (n > 1))
     {
         fputs ("invalid argument!\n",stderr);
         return -1;
@@ -587,7 +587,7 @@ int CPrint::MW_SetBoldMode(unsigned char n)
 ***********************************************************************/
 int CPrint::MW_SelecAsciiFont(unsigned char n)
 {
-    if (n < 0 || n > 1 )
+    if ((n < 0) || (n > 1))
     {
         fputs ("invalid argument!\n",stderr);
         return -1;
@@ -608,11 +608,11 @@ int CPrint::MW_SelecAsciiFont(unsigned char n)
 * 返 回 值： 成功返回 0 ，失败返回 -1
 * 其它说明： 
 ***********************************************************************/
-int CPrint::MW_SetRefPrintPosition(int iPost)
+int CPrint::MW_SetRefPrintPosition(unsigned int iPost)
 {
     unsigned char nL,nH;
-    nL = iPost % 255;
-    nH = iPost / 255;
+    nL = iPost % 256;
+    nH = iPost / 256;
     
     unsigned char cWriteBuf[10];
     cWriteBuf[0] = 0x1B;
@@ -654,6 +654,7 @@ int CPrint::MW_SelectAlignMode(unsigned char n)
              对于只支持 24 位深的位图，且宽，高均要是 8 的倍数！！
              位图宽满足 Width <= 376, 
              位图高满足 47 * Height < 16K
+             【注：开头3行左右会重叠打印在一行，建议留白】
 ***********************************************************************/
 int CPrint::MW_DownloadBitmapToFlash(char *pcBitmapAddr)
 {
@@ -778,11 +779,22 @@ int CPrint::MW_DownloadBitmapToFlash(char *pcBitmapAddr)
         }
     }
     
-    // printf("tmpX = %d tmpY = %d iFlashDataNum = %d\n",tmpX, tmpY, iFlashDataNum);
+//     for(int i = 0; i < iFlashDataNum; i++)
+//     {
+//         printf("0x%02X ", pucFlashData[i]);
+//         if ((i % 16) == 15)   // 0-7 8-15 
+//         {
+//             printf("\n");
+//         }
+//     }
+//     printf("\n");
 
-    WriteToPort(escBmp, 7);
-    WriteToPort(pucFlashData, iFlashDataNum);
-    Sleep(10000);
+
+    printf("tmpX = %d tmpY = %d iFlashDataNum = %d\n",tmpX, tmpY, iFlashDataNum);
+
+//     WriteToPort(escBmp, 7);
+//     WriteToPort(pucFlashData, iFlashDataNum);
+//     Sleep(10000);
 
     free(pucFlashData);
 	/////////////////////////////////////////////////////////////////////////
@@ -806,7 +818,7 @@ int CPrint::MW_DownloadBitmapToFlash(char *pcBitmapAddr)
 ***********************************************************************/
 int CPrint::MW_PrintFlashBitmap(unsigned char n)
 {
-    if (n < 0 || n > 3 )
+    if ((n < 0) || (n > 3))
     {
         fputs ("invalid argument!\n",stderr);
 		return -1;
@@ -821,4 +833,36 @@ int CPrint::MW_PrintFlashBitmap(unsigned char n)
     WriteToPort(escBmp, 4);
     return 0;
 
+}
+
+/**********************************************************************
+* 函数名称： MW_selectFontSize
+* 功能描述： 选择字体大小，用 0 到 2 位选择字符高度，4 到 7 位选择字符宽度
+* 输入参数： n 字体大小
+                位      功能
+                0-3     字符高度选择
+                4-7     字符宽度选择 
+             高度、宽度的范围都是 0-7，表示与正常显示的倍数关系 
+    
+* 输出参数： 无
+* 返 回 值： 成功返回 0 ，失败返回 -1
+* 其它说明： 
+***********************************************************************/
+int CPrint::MW_selectFontSize(unsigned char n)
+{
+    unsigned char nL,nH;
+    nL = n % 16;
+    nH = n / 16;
+    if ((nL < 0) || (nL > 7) || (nH < 0) || (nH > 7) )
+    {
+        fputs ("invalid argument!\n",stderr);
+        return -1;
+    }
+
+    unsigned char escBmp[10];
+    escBmp[0] = 0x1D;
+    escBmp[1] = 0x21;
+    escBmp[2] = n;
+    WriteToPort(escBmp, 3);
+    return 0;    
 }
