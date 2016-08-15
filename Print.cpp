@@ -118,6 +118,7 @@ unsigned char CPrint::MW_RealTimeStatus(unsigned char n)
 * 输出参数： 无
 * 返 回 值： 0 正常，-1 表示出错
 * 其它说明：地址中的 \ 需要进行转义，如 D:\\VC_Project\\Demo\\熊猫.bmp
+            目前只支持 24 位深的位图，位图宽不能超过 384 像素
 ***********************************************************************/
 int CPrint::MW_PrintBitmap(char *pcPicAddr)
 {
@@ -600,7 +601,10 @@ int CPrint::MW_SelectAlignMode(unsigned char n)
 * 输入参数： *pcBitmapAddr 为位图的路径
 * 输出参数： 无
 * 返 回 值： 成功返回 0 ，失败返回 -1
-* 其它说明： Flash 下载容量最大为 8096 字节
+* 其它说明： 打印机自带 16K 的存储。
+             对于只支持 24 位深的位图，且宽，高均要是 8 的倍数！！
+             位图宽满足 Width <= 376, 
+             位图高满足 47 * Height < 16K
 ***********************************************************************/
 int CPrint::MW_DownloadBitmapToFlash(char *pcBitmapAddr)
 {
@@ -646,60 +650,21 @@ int CPrint::MW_DownloadBitmapToFlash(char *pcBitmapAddr)
 	BITMAPINFOHEADER *ptBitmapH = (BITMAPINFOHEADER *)&pucBuffer[14];
 	int iWidth;
 	int iHeight;
-	int iBMPBpp;
-	int iLineWidthAlign;
-	int iLineWidthReal;
+	int iBMPBpp;        // bitmap 位深
+	int iLineWidthAlign;// bitmap 每行对齐后的字节数
+	int iLineWidthReal; // bitmap 每行实际字节数
+    int iFlashDataNum; // Flash 图片缓存区的字节数
 	int iCurBlue;  // 当前 RGB 中的蓝色值 
-//	int iCurLine;
+    int iCurFlashByte;  // 当前 Flash 字节位置
+    int iColBytesNum;   // 每列字节数
 	unsigned char ucaData[10] = {0};
 	unsigned char *pucSrc; // 指向图片数据
-
-// 	//设置字符行间距为 0 点行
-//     unsigned char data[] = { 0x1B, 0x33, 0x00 };
-//  	WriteToPort(data, sizeof(data));
+    unsigned char * pucFlashData; // 指向 Flash 图片缓存区
 
 	// FS q m xL xH yL yH d1…dk   定义 Flash 位图
 	// k = (xL + xH * 256) * (yL + yH * 256) * 8 
 	unsigned char escBmp[] = { 0x1C, 0x71, 0x01, 0x00, 0x00, 0x00, 0x00 };
     
-//     //////////////////////////////////////////////////////////
-//     // 1. DownLoad to Flash Test
-//     // 可用的测试样例：[x= 横向字节数 y = 竖向字节数]
-//     //               xL XH yL yH
-//     //      1C 71 01 01 00 01 00 FF 00 FF 00 00 FF 00 FF
-//     //      1C 70 01 03
-//     escBmp[0] = 0x1C;
-//     escBmp[1] = 0x71;
-//     escBmp[2] = 0x01;
-// 
-//     escBmp[3] = 0x01;
-//     escBmp[4] = 0x00;
-// 
-//     escBmp[5] = 0x01;
-//     escBmp[6] = 0x00;
-//     WriteToPort(escBmp, 7);
-// 
-//     // 数据
-//     ucaData[0] = 0xFF;
-//     ucaData[1] = 0x81;
-//     ucaData[2] = 0x81;
-//     ucaData[3] = 0x81;
-//     ucaData[4] = 0x81;
-//     ucaData[5] = 0x81;
-//     ucaData[6] = 0x81;
-//     ucaData[7] = 0xFF;
-//     WriteToPort(ucaData, 8);
-// 
-//     Sleep(10000);
-//     //MW_InitPrint();
-//     escBmp[0] = 0x1C;
-//     escBmp[1] = 0x70;
-//     escBmp[2] = 0x01;
-//     escBmp[3] = 0x03;
-//     WriteToPort(escBmp, 4);
-// 
-//     //////////////////////////////////////////////////////////
-
 	//xL, xH
     long tmpX = (ptBitmapH->biWidth + 7) / 8; 
 	escBmp[3] = (unsigned char)(tmpX % 256);
@@ -710,14 +675,20 @@ int CPrint::MW_DownloadBitmapToFlash(char *pcBitmapAddr)
     escBmp[5] = (unsigned char)(tmpY % 256);
 	escBmp[6] = (unsigned char)(tmpY / 256);
 
-    unsigned char * pucFlashData;
-    int iFlastDataNum = (tmpY * tmpY * 8);
-    pucFlashData = (unsigned char*) calloc (iFlastDataNum, sizeof(unsigned char));  
+    iFlashDataNum = (tmpX * tmpY * 8);
+    pucFlashData = (unsigned char*) calloc (iFlashDataNum, sizeof(unsigned char));  
 
 	iWidth = ptBitmapH->biWidth;
 	iHeight = ptBitmapH->biHeight;
 	iBMPBpp = ptBitmapH->biBitCount;
 	
+    // 目前图片只支持行，列是 8 的倍数的图片
+    if ( ((iWidth % 8) != 0) || ((iHeight % 8) != 0))
+    {
+        fputs ("Bitmap iWidth or iHeight can not divide by 8 !",stderr); 
+        return -1;
+    }
+
 	iLineWidthReal = iWidth * iBMPBpp / 8;
 	iLineWidthAlign = (iLineWidthReal + 3) & ~0x3;   // 向 4 取整 
 	
@@ -726,9 +697,8 @@ int CPrint::MW_DownloadBitmapToFlash(char *pcBitmapAddr)
 	pucSrc = pucBuffer + ptBitmap->bfOffBits; // 指向图片左下, 即资源开始的地方 
     //pucSrc = pucSrc + (iHeight - 1) * iLineWidthAlign; 
     
-    int iCurFlashByte; // 当前 Flash 字节位置
-    int iColBytesNum;
-    iColBytesNum = (iHeight + 7) / 8;
+
+    iColBytesNum = (iHeight + 7) / 8; 
 
     for (int x = 0; x < iWidth; x++) // 第几列
     {
@@ -760,7 +730,7 @@ int CPrint::MW_DownloadBitmapToFlash(char *pcBitmapAddr)
         }
     }
     
-    for ( x = 0; x < iFlastDataNum; x++)
+    for ( x = 0; x < iFlashDataNum; x++)
     {
         printf("0x%02X ", pucFlashData[x]);
         if (8 == x)
@@ -770,13 +740,15 @@ int CPrint::MW_DownloadBitmapToFlash(char *pcBitmapAddr)
     }
     printf("\n");
 
+    printf("tmpX = %d tmpY = %d iFlashDataNum = %d\n",tmpX, tmpY, iFlashDataNum);
+
     WriteToPort(escBmp, 7);
-    WriteToPort(pucFlashData, iFlastDataNum);
+    WriteToPort(pucFlashData, iFlashDataNum);
     Sleep(10000);
     escBmp[0] = 0x1C;
     escBmp[1] = 0x70;
     escBmp[2] = 0x01;
-    escBmp[3] = 0x03;
+    escBmp[3] = 0x00;
     WriteToPort(escBmp, 4);
 
     free(pucFlashData);

@@ -146,6 +146,10 @@ SOURCE=.\Bitmap8x8.bmp
 # End Source File
 # Begin Source File
 
+SOURCE=.\Bitmap_1024x8.bmp
+# End Source File
+# Begin Source File
+
 SOURCE=".\Bitmap_ÖÐ¹ú.bmp"
 # End Source File
 # End Group
