@@ -14,7 +14,14 @@
 class CPrint : public CSerialPort  
 {
 public:
-	int MW_selectFontSize(unsigned char n);
+    int MW_PrintBarcode(unsigned char ucMode, char *pcData);
+    int MW_SetBarcodeHeight(unsigned char n);
+    int MW_SetHriFont(unsigned char n);
+    int MW_SetPrintWidth(unsigned int n);
+	int MW_SetPrintLeftMargin(unsigned int n);
+	int MW_SetHriLocation(unsigned char n);
+	int MW_SelectBlackAndWhiteReverse(unsigned char n);
+	int MW_SelectFontSize(unsigned char n);
 	int MW_PrintFlashBitmap(unsigned char n);
 	int MW_DownloadBitmapToFlash(char *pcBitmapAddr);
 	int MW_SelectAlignMode(unsigned char n);

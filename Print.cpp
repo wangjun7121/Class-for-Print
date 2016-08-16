@@ -220,7 +220,7 @@ int CPrint::MW_PrintBitmap(char *pcPicAddr)
 
 	//ESC * m nL nH d1…dk   选择位图模式
 	// ESC * m nL nH
-	unsigned char escBmp[] = { 0x1B, 0x2A, 0x00, 0x00, 0x00 };
+	unsigned char escTmp[] = { 0x1B, 0x2A, 0x00, 0x00, 0x00 };
 
 
 	/* 不同模式宽度限制：每行固定像素点为 384
@@ -229,11 +229,11 @@ int CPrint::MW_PrintBitmap(char *pcPicAddr)
 			0x32: 24 点单密度，192 宽的位图 
 			0x33: 24 点双密度，384 宽的位图 
 	*/
-	escBmp[2] = 0x21;
+	escTmp[2] = 0x21;
 	
 	//nL, nH
-	escBmp[3] = (unsigned char)(ptBitmapH->biWidth % 256);
-	escBmp[4] = (unsigned char)(ptBitmapH->biWidth / 256);
+	escTmp[3] = (unsigned char)(ptBitmapH->biWidth % 256);
+	escTmp[4] = (unsigned char)(ptBitmapH->biWidth / 256);
 	
 	iWidth = ptBitmapH->biWidth;
 	iHeight = ptBitmapH->biHeight;
@@ -250,7 +250,7 @@ int CPrint::MW_PrintBitmap(char *pcPicAddr)
 //  // 8 点单密度
 // 	for (int y = 0; y < (iHeight / 8 + 1); y++)// 循环组，每 8 行一组 + 1 处理最后一组
 // 	{	
-// 		WriteToPort(escBmp, 5);
+// 		WriteToPort(escTmp, 5);
 // 		for (int x = 0; x < iWidth; x++)// 循环列，每列一字节
 // 		{
 // 			ucaData[0] = 0x00;
@@ -282,7 +282,7 @@ int CPrint::MW_PrintBitmap(char *pcPicAddr)
     // 图片旋转，处理组也从 左下 0 至 (iHeight / 24 + 1) 变成  (iHeight / 24 + 1) 至0
 	for (int y = (iHeight / 24); y >=0 ; y--)// 循环组，每 24 行一组 + 1 处理最后一组
 	{	
-		WriteToPort(escBmp, 5);
+		WriteToPort(escTmp, 5);
 		for (int x = 0; x < iWidth; x++)// 循环列，每列3字节
 		{
 			ucaData[0] = 0x00;
@@ -712,17 +712,17 @@ int CPrint::MW_DownloadBitmapToFlash(char *pcBitmapAddr)
 
 	// FS q m xL xH yL yH d1…dk   定义 Flash 位图
 	// k = (xL + xH * 256) * (yL + yH * 256) * 8 
-	unsigned char escBmp[] = { 0x1C, 0x71, 0x01, 0x00, 0x00, 0x00, 0x00 };
+	unsigned char escTmp[] = { 0x1C, 0x71, 0x01, 0x00, 0x00, 0x00, 0x00 };
     
 	//xL, xH
     long tmpX = (ptBitmapH->biWidth + 7) / 8; 
-	escBmp[3] = (unsigned char)(tmpX % 256);
-	escBmp[4] = (unsigned char)(tmpX / 256);
+	escTmp[3] = (unsigned char)(tmpX % 256);
+	escTmp[4] = (unsigned char)(tmpX / 256);
 	
     //yL, yH
     long tmpY = (ptBitmapH->biHeight + 7) / 8; 
-    escBmp[5] = (unsigned char)(tmpY % 256);
-	escBmp[6] = (unsigned char)(tmpY / 256);
+    escTmp[5] = (unsigned char)(tmpY % 256);
+	escTmp[6] = (unsigned char)(tmpY / 256);
 
     iFlashDataNum = (tmpX * tmpY * 8);
     pucFlashData = (unsigned char*) calloc (iFlashDataNum, sizeof(unsigned char));  
@@ -792,7 +792,7 @@ int CPrint::MW_DownloadBitmapToFlash(char *pcBitmapAddr)
 
     printf("tmpX = %d tmpY = %d iFlashDataNum = %d\n",tmpX, tmpY, iFlashDataNum);
 
-//     WriteToPort(escBmp, 7);
+//     WriteToPort(escTmp, 7);
 //     WriteToPort(pucFlashData, iFlashDataNum);
 //     Sleep(10000);
 
@@ -825,12 +825,12 @@ int CPrint::MW_PrintFlashBitmap(unsigned char n)
     }
     if (GetPrintStatus() != 0)
         return -1;
-	unsigned char escBmp[] = { 0x1C, 0x71, 0x01, 0x00, 0x00, 0x00, 0x00 };
-    escBmp[0] = 0x1C;
-    escBmp[1] = 0x70;
-    escBmp[2] = 0x01;
-    escBmp[3] = 0x00;
-    WriteToPort(escBmp, 4);
+	unsigned char escTmp[] = { 0x1C, 0x71, 0x01, 0x00, 0x00, 0x00, 0x00 };
+    escTmp[0] = 0x1C;
+    escTmp[1] = 0x70;
+    escTmp[2] = 0x01;
+    escTmp[3] = 0x00;
+    WriteToPort(escTmp, 4);
     return 0;
 
 }
@@ -848,7 +848,7 @@ int CPrint::MW_PrintFlashBitmap(unsigned char n)
 * 返 回 值： 成功返回 0 ，失败返回 -1
 * 其它说明： 
 ***********************************************************************/
-int CPrint::MW_selectFontSize(unsigned char n)
+int CPrint::MW_SelectFontSize(unsigned char n)
 {
     unsigned char nL,nH;
     nL = n % 16;
@@ -859,10 +859,365 @@ int CPrint::MW_selectFontSize(unsigned char n)
         return -1;
     }
 
-    unsigned char escBmp[10];
-    escBmp[0] = 0x1D;
-    escBmp[1] = 0x21;
-    escBmp[2] = n;
-    WriteToPort(escBmp, 3);
+    unsigned char escTmp[10];
+    escTmp[0] = 0x1D;
+    escTmp[1] = 0x21;
+    escTmp[2] = n;
+    WriteToPort(escTmp, 3);
     return 0;    
+}
+/**********************************************************************
+* 函数名称：MW_SelectBlackAndWhiteReverse
+* 功能描述：选择/取消黑白反显打印模式
+* 输入参数：n 用于反显选择：
+              当 n 的最低位为 0 时，取消反显打印
+              当 n 的最低位为 1 时，选择反显打印
+    
+* 输出参数： 无
+* 返 回 值： 成功返回 0 ，失败返回 -1
+* 其它说明： 
+***********************************************************************/
+int CPrint::MW_SelectBlackAndWhiteReverse(unsigned char n)
+{
+    unsigned char escTmp[10];
+    escTmp[0] = 0x1D;
+    escTmp[1] = 0x42;
+    escTmp[2] = n;
+    WriteToPort(escTmp, 3);
+    return 0; 
+}
+
+/**********************************************************************
+* 函数名称：MW_SetHriLocation
+* 功能描述：设置条码字符打印位置
+* 输入参数：n 用于位置选择：
+                0       不打印
+                1       条码上方
+                2       条码下方
+                3       条码上、下方都打印 
+    
+* 输出参数： 无
+* 返 回 值： 成功返回 0 ，失败返回 -1
+* 其它说明： HRI 字符是对条码内容注释的字符
+***********************************************************************/
+int CPrint::MW_SetHriLocation(unsigned char n)
+{
+    if ((n < 0) || (n > 3))
+    {
+        fputs ("invalid argument!\n",stderr);
+        return -1;
+    }
+    unsigned char escTmp[10];
+    escTmp[0] = 0x1D;
+    escTmp[1] = 0x48;
+    escTmp[2] = n;
+    WriteToPort(escTmp, 3);
+    return 0; 
+}
+
+/**********************************************************************
+* 函数名称：MW_SetPrintLeftMargin
+* 功能描述：设置打印左边距
+* 输入参数：n 为左边距距离，单位为英寸    
+* 输出参数： 无
+* 返 回 值： 成功返回 0 ，失败返回 -1
+* 其它说明： 
+***********************************************************************/
+int CPrint::MW_SetPrintLeftMargin(unsigned int n)
+{
+    unsigned char nL,nH;
+    nL = n % 256;
+    nH = n / 256;
+    unsigned char escTmp[10];
+    escTmp[0] = 0x1D;
+    escTmp[1] = 0x48;
+    escTmp[2] = nL;
+    escTmp[3] = nH;
+    WriteToPort(escTmp, 4);
+    return 0; 
+
+
+}
+
+
+/**********************************************************************
+* 函数名称： MW_SetPrintWidth
+* 功能描述： 设置打印宽度
+* 输入参数： n 为打印宽度，单位为英寸 
+* 输出参数： 无
+* 返 回 值： 成功返回 0 ，失败返回 -1
+* 其它说明： 
+***********************************************************************/
+int CPrint::MW_SetPrintWidth(unsigned int n)
+{
+    unsigned char nL,nH;
+    nL = n % 256;
+    nH = n / 256;
+    unsigned char escTmp[10];
+    escTmp[0] = 0x1D;
+    escTmp[1] = 0x57;
+    escTmp[2] = nL;
+    escTmp[3] = nH;
+    WriteToPort(escTmp, 4);
+    return 0; 
+   
+}
+
+/**********************************************************************
+* 函数名称： MW_SetHriFont
+* 功能描述： 设置条码 HRI 字体
+* 输入参数： n 用于字体选择：
+                0   标准 ASCII 码字符(12x24)
+                1   压缩 ASCII 码字符(9x17)
+* 输出参数： 无
+* 返 回 值： 成功返回 0 ，失败返回 -1
+* 其它说明： HRI 字符是对条码内容注释的字符
+***********************************************************************/
+int CPrint::MW_SetHriFont(unsigned char n)
+{
+    if ((n < 0) || (n > 1))
+    {
+        fputs ("invalid argument!\n",stderr);
+        return -1;
+    }
+    unsigned char escTmp[10];
+    escTmp[0] = 0x1D;
+    escTmp[1] = 0x66;
+    escTmp[2] = n;
+    WriteToPort(escTmp, 3);
+    return 0; 
+    
+}
+
+/**********************************************************************
+* 函数名称： MW_SetBarcodeHeight
+* 功能描述： 设置条码高度
+* 输入参数： n 为条码高度，单位点【默认值 162】
+* 输出参数： 无
+* 返 回 值： 成功返回 0 ，失败返回 -1
+* 其它说明： 
+***********************************************************************/
+int CPrint::MW_SetBarcodeHeight(unsigned char n)
+{
+    if ((n < 0) || (n > 255))
+    {
+        fputs ("invalid argument!\n",stderr);
+        return -1;
+    }
+    unsigned char escTmp[10];
+    escTmp[0] = 0x1D;
+    escTmp[1] = 0x68;
+    escTmp[2] = n;
+    WriteToPort(escTmp, 3);
+    return 0; 
+    
+}
+
+/**********************************************************************
+* 函数名称： MW_PrintBarcode
+* 功能描述： 打印条码
+* 输入参数： ucMode 要打印的条码格式，*pcData指向条码数据
+* 输出参数： 无
+* 返 回 值： 成功返回 0 ，失败返回 -1
+* 其它说明： 
+---------------------------------------------------------------------------------------
+| m(十进制)   | 条码类型       | 字符个数    | 字符                                   |
+---------------------------------------------------------------------------------------
+| 数据格式一：1D 6B m xx xx 00                                                        |
+---------------------------------------------------------------------------------------
+| 0(0x00)     | UPC-A          | 11          | 0-9                                    |
+---------------------------------------------------------------------------------------
+| 1(0x01)     | UPC-E          | 6           | 0-9                                    |
+---------------------------------------------------------------------------------------
+| 2(0x02)     | JAN13/EAN13    | 12          | 0-9                                    |
+---------------------------------------------------------------------------------------
+| 3(0x03)     | JAN8/EAN8      | 7           | 0-9                                    |
+---------------------------------------------------------------------------------------
+| 4(0x04)     | CODE39         | 1-255       | 0-9 A-Z SP,$,%,+,-,.,/, *(开始结束字符)|
+---------------------------------------------------------------------------------------
+| 5(0x05)     | ITF            | 1-255(偶数) | 0-9                                    |
+---------------------------------------------------------------------------------------
+| 6(0x06)     | CODEBAR        | 1-255       | 0-9 A-D $,+,-,.,/,                     |
+---------------------------------------------------------------------------------------
+| 数据格式二：1D 6B m n xx xx                                                         |
+---------------------------------------------------------------------------------------
+| 65(0x41)    | UPC-A          | 11          | 0-9                                    |
+---------------------------------------------------------------------------------------
+| 66(0x42)    | UPC-E          | 6           | 0-9                                    |
+---------------------------------------------------------------------------------------
+| 67(0x43)    | JAN13/EAN13    | 12          | 0-9                                    |
+---------------------------------------------------------------------------------------
+| 68(0x44)    | JAN8/EAN8      | 7           | 0-9                                    |
+---------------------------------------------------------------------------------------
+| 69(0x45)    | CODE39         | 1-255       | 0-9 A-Z SP,$,%,+,-,.,/, *(开始结束字符)|
+---------------------------------------------------------------------------------------
+| 70(0x46)    | ITF            | 1-255(偶数) | 0-9                                    |
+---------------------------------------------------------------------------------------
+| 71(0x47)    | CODEBAR        | 1-255       | 0-9 A-D $,+,-,.,/,                     |
+---------------------------------------------------------------------------------------
+| 72(0x48)    | CODE93         | 1-255       | NUL-SP(7FH)                            |
+---------------------------------------------------------------------------------------
+| 73(0x49)    | CODE128        | 2-255       | NUL-SP(7FH)                            |
+---------------------------------------------------------------------------------------
+***********************************************************************/
+int CPrint::MW_PrintBarcode(unsigned char ucMode, char *pcData)
+{
+
+    /*
+     Code39: 0123456789
+        1D 68 78        // 选择条码高度
+        1D 77 02        // 设置条码宽度
+        1D 48 02        // 选择 HRI 字符的打印位置，条码下方
+        0A 
+        1D 6B 45 0A 30 31 32 33 34 35 36 37 38 39 0A 
+
+     Code128:0123456789
+        1D 68 78
+        1D 77 02 
+        1D 48 02 
+        0a 
+        1D 6B 49 0C 7B 41 30 31 32 33 34 35 36 37 38 39 0A
+
+    //////////////////////////////////////////////////////////
+    // 测试命令：
+        1D 6B 00 30 31 32 33 34 35 36 37 38 39 39 00
+    */
+    unsigned char escTmp[270];
+    int iStrLength = strlen(pcData);
+
+    if (GetPrintStatus() != 0)
+        return -1;
+
+    if ((ucMode < 0) || ((ucMode > 6) && (ucMode < 65 )) || (ucMode > 73 ))
+    {
+        fputs ("invalid argument!\n",stderr);
+        return -1;
+    }
+    if (iStrLength > 255)
+    {
+        fputs ("invalid string length > 255!\n",stderr);
+        return -1;
+    }
+    //memcpy(ucData, pcData, sizeof(pcData));
+
+
+    escTmp[0] = 0x1D;
+    escTmp[1] = 0x6B;
+
+
+    switch(ucMode)
+    {
+    case 0:
+        strcpy((char *)escTmp+3, pcData);
+        escTmp[2] = 0x00;
+        WriteToPort(escTmp, 4+iStrLength);
+        MW_LF();
+        break;
+    case 1:
+        strcpy((char *)escTmp+3, pcData);
+        escTmp[2] = 0x01;
+        WriteToPort(escTmp, 4+iStrLength);
+        MW_LF();
+        break;
+    case 2:
+        strcpy((char *)escTmp+3, pcData);
+        escTmp[2] = 0x02;
+        WriteToPort(escTmp, 4+iStrLength);
+        MW_LF();
+        break;
+    case 3:
+        strcpy((char *)escTmp+3, pcData);
+        escTmp[2] = 0x03;
+        WriteToPort(escTmp, 4+iStrLength);
+        MW_LF();
+        break;
+    case 4:
+        strcpy((char *)escTmp+3, pcData);
+        escTmp[2] = 0x04;
+        WriteToPort(escTmp, 4+iStrLength);
+        MW_LF();
+        break;
+    case 5:
+        strcpy((char *)escTmp+3, pcData);
+        escTmp[2] = 0x05;
+        WriteToPort(escTmp, 4+iStrLength);
+        MW_LF();
+        break;
+    case 6:
+        strcpy((char *)escTmp+3, pcData);
+        escTmp[2] = 0x06;
+        WriteToPort(escTmp, 4+iStrLength);
+        MW_LF();
+        break;
+    // 第二种格式：带长度发送
+    case 65:
+        strcpy((char *)escTmp+4, pcData);
+        escTmp[2] = 0x41;
+        escTmp[3] = iStrLength;
+        WriteToPort(escTmp, 4+iStrLength);
+        MW_LF();
+        break;
+    case 66:
+        strcpy((char *)escTmp+4, pcData);
+        escTmp[2] = 0x42;
+        escTmp[3] = iStrLength;
+        WriteToPort(escTmp, 4+iStrLength);
+        MW_LF();
+        break;
+    case 67:
+        strcpy((char *)escTmp+4, pcData);
+        escTmp[2] = 0x43;
+        escTmp[3] = iStrLength;
+        WriteToPort(escTmp, 4+iStrLength);
+        MW_LF();
+        break;
+    case 68:
+        strcpy((char *)escTmp+4, pcData);
+        escTmp[2] = 0x44;
+        escTmp[3] = iStrLength;
+        WriteToPort(escTmp, 4+iStrLength);
+        MW_LF();
+        break;
+    case 69:
+        strcpy((char *)escTmp+4, pcData);
+        escTmp[2] = 0x45;
+        escTmp[3] = iStrLength;
+        WriteToPort(escTmp, 4+iStrLength);
+        MW_LF();
+        break;
+    case 70:
+        strcpy((char *)escTmp+4, pcData);
+        escTmp[2] = 0x46;
+        escTmp[3] = iStrLength;
+        WriteToPort(escTmp, 4+iStrLength);
+        MW_LF();
+        break;
+    case 71:
+        strcpy((char *)escTmp+4, pcData);
+        escTmp[2] = 0x47;
+        escTmp[3] = iStrLength;
+        WriteToPort(escTmp, 4+iStrLength);
+        MW_LF();
+        break;
+    case 72:
+        strcpy((char *)escTmp+4, pcData);
+        escTmp[2] = 0x48;
+        escTmp[3] = iStrLength;
+        WriteToPort(escTmp, 4+iStrLength);
+        MW_LF();
+        break;
+    case 73:
+        strcpy((char *)escTmp+4, pcData);
+        escTmp[2] = 0x49;
+        escTmp[3] = iStrLength;
+        WriteToPort(escTmp, 4+iStrLength);
+        MW_LF();
+        break;
+    default:
+        fputs ("invalid argument!\n",stderr);
+        return -1;
+    }
+
+    return 0; 
+    
 }
