@@ -21,6 +21,7 @@ char * pString = "-------------------------------\n"
 				"-------------------------------\n";
 char *pString2 = "1234567891011121314151617181920\n";
 char *pString3 = "123456789\n";
+char *pString4 = "我是中国人";
 int main(int argc, char* argv[])
 {
 
@@ -172,8 +173,21 @@ int main(int argc, char* argv[])
 //     */
 //     unsigned char ucMode;
 //     ucMode = 73;
-//     g_clsPrint->PrintBarcode(ucMode, "01234567");
+//     g_clsPrint->MW_PrintBarcode(ucMode, "01234567");
 
+    // 13. 汉字测试
+    unsigned char ucMode = 0;
+    unsigned char ucLeft,ucRight;
+    //ucMode |= (1 << 2)|(1 << 3)|(1 << 7);
+    // g_clsPrint->MW_SetHanZiMode(ucMode);
+    //ucMode = 0;
+    //g_clsPrint->MW_ShowHanZiUndline(ucMode);
+    //ucLeft = 10;
+    //ucRight = 10;
+    //g_clsPrint->MW_SetHanZiLeftAndRightSpace(ucLeft, ucRight);
+    ucMode = 1;
+    g_clsPrint->MW_SetHanZiAsTwiceHeightAndWidth(ucMode);
+    g_clsPrint->MW_PrintString(pString4);
 
 //////////////////////////////////////////////////////////
 	g_clsPrint->ClosePort();

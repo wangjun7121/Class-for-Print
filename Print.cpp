@@ -82,7 +82,7 @@ void CPrint::MW_LF()
 				n = 2: 传送脱机状态
 				n = 3: 传送错误状态
 				n = 4: 传送纸传感器状态 
-* 输出参数： // 对输出参数的说明。
+* 输出参数： 无
 * 返 回 值： 根据请求的不同打印机状态，有不同的错误代码
 			【n = 1】：打印机状态
 				位	0/1		十六进制码		十进制码	功能
@@ -585,7 +585,7 @@ int CPrint::MW_SetBoldMode(unsigned char n)
 * 返 回 值： 成功返回 0 ，失败返回 -1
 * 其它说明： 
 ***********************************************************************/
-int CPrint::MW_SelecAsciiFont(unsigned char n)
+int CPrint::MW_SelectAsciiFont(unsigned char n)
 {
     if ((n < 0) || (n > 1))
     {
@@ -1016,12 +1016,12 @@ int CPrint::MW_SetBarcodeHeight(unsigned char n)
 /**********************************************************************
 * 函数名称： MW_PrintBarcode
 * 功能描述： 打印条码
-* 输入参数： ucMode 要打印的条码格式，*pcData指向条码数据
+* 输入参数： ucMode(十进制) 要打印的条码格式，*pcData指向条码数据
 * 输出参数： 无
 * 返 回 值： 成功返回 0 ，失败返回 -1
 * 其它说明： 
 ---------------------------------------------------------------------------------------
-| m(十进制)   | 条码类型       | 字符个数    | 字符                                   |
+| 模式(十进制)| 条码类型       | 字符个数    | 字符                                   |
 ---------------------------------------------------------------------------------------
 | 数据格式一：1D 6B m xx xx 00                                                        |
 ---------------------------------------------------------------------------------------
@@ -1098,7 +1098,6 @@ int CPrint::MW_PrintBarcode(unsigned char ucMode, char *pcData)
         fputs ("invalid string length > 255!\n",stderr);
         return -1;
     }
-    //memcpy(ucData, pcData, sizeof(pcData));
 
 
     escTmp[0] = 0x1D;
@@ -1107,6 +1106,7 @@ int CPrint::MW_PrintBarcode(unsigned char ucMode, char *pcData)
 
     switch(ucMode)
     {
+    // 第一种，不带长度发送
     case 0:
         strcpy((char *)escTmp+3, pcData);
         escTmp[2] = 0x00;
@@ -1212,6 +1212,253 @@ int CPrint::MW_PrintBarcode(unsigned char ucMode, char *pcData)
         escTmp[3] = iStrLength;
         WriteToPort(escTmp, 4+iStrLength);
         MW_LF();
+        break;
+    default:
+        fputs ("invalid argument!\n",stderr);
+        return -1;
+    }
+
+    return 0; 
+    
+}
+
+
+// *********************************************************************
+// * 函数名称： MW_GetPrinterStatus
+// * 功能描述： 获得打印机纸以及钱箱状态
+// * 输入参数： n 为条码高度，单位点【默认值 162】
+// * 输出参数： 无
+// * 返 回 值： 返回值是纸传感器状态或钱箱状态
+// * 其它说明： 返回值是纸传感器状态或钱箱状态
+//             【n = 1】：纸传感器状态
+//                 位	0/1		十六进制码		十进制码	状态
+//                 0/1	0		00				0		    纸将尽传感器，有纸
+//                 	1		03				3			纸将尽传感器，纸将尽
+//                 2/3 0       00              0           纸尽传感器，有纸
+//                     1       0c              12          纸尽传感器，缺纸
+//                 4   0       00              0           不用，固定为 0
+//                 5/6 -       --              --          未定义
+//                 7   0       00              0           不用，固定为 0
+//             【n = 2 】：钱箱状态
+//                 位	0/1		十六进制码		十进制码	功能
+//                 0	0		00				0			有钱箱打开
+//                     1       01              1           无钱箱打开
+//                 1-3 -       --              --          未定义
+//                 4   0       00              0           不用，固定为 0
+//                 5/6 -       --              --          未定义
+//                 7   0       00              0           不用，固定为 0
+//                 
+// **********************************************************************
+// int CPrint::MW_GetPrinterStatus(unsigned char n)
+// {
+//     if ((n < 1) || (n > 2))
+//     {
+//         fputs ("invalid argument!\n",stderr);
+//         return -1;
+//     }
+//     unsigned char escTmp[10];
+//     escTmp[0] = 0x1D;
+//     escTmp[1] = 0x72;
+//     escTmp[2] = n;
+//     WriteToPort(escTmp, 3);
+//     return 0; 
+//     
+// }
+
+/**********************************************************************
+* 函数名称： MW_SetBarcodeWidth
+* 功能描述： 设置条码宽度
+* 输入参数： n 为条码宽度
+                n   单基本模块宽度(毫米)    双基本模块宽度
+                                            窄(毫米)    宽(毫米)
+                2   0.25                    0.25        0.625
+                3   0.375                   0.375       1.0
+                4   0.5                     0.5         1.25
+                5   0.625                   0.625       1.625
+                6   0.75                    0.75        1.875
+            
+              单基本模块条码如下：
+                UPC-A,UPC-E,JAN13(EAN13),JAN8(EAN8),CODE93,CODE128
+              双基本模块条码如下：
+                CODE39,ITF,CODABAR 
+            默认值：3
+* 输出参数： 无
+* 返 回 值： 成功返回 0 ，失败返回 -1
+* 其它说明： 
+***********************************************************************/
+int CPrint::MW_SetBarcodeWidth(unsigned char n)
+{
+    if ((n < 2) || (n > 6))
+    {
+        fputs ("invalid argument!\n",stderr);
+        return -1;
+    }
+    unsigned char escTmp[10];
+    escTmp[0] = 0x1D;
+    escTmp[1] = 0x77;
+    escTmp[2] = n;
+    WriteToPort(escTmp, 3);
+    return 0; 
+    
+}
+
+/**********************************************************************
+* 函数名称： MW_SetHanZiMode
+* 功能描述： 设置汉字的倍宽、倍高与下划线
+* 输入参数： n 为要设置的项
+                位	0/1		十六进制码		十进制码	状态
+                0/1 -       --              --          未定义
+                2   0       00              0           取消倍宽
+                    1       04              4           选择倍宽
+                3   0       00              0           取消倍高
+                    1       08              8           选择倍高
+                4-6 -       --              -           未定义
+                7   0       00              0           取消下划线
+                    1       80              128         选择下划线
+           
+* 输出参数： 无
+* 返 回 值： 成功返回 0 ，失败返回 -1
+* 其它说明： 
+***********************************************************************/
+int CPrint::MW_SetHanZiMode(unsigned char n)
+{
+    if ((n < 0) || (n > 255))
+    {
+        fputs ("invalid argument!\n",stderr);
+        return -1;
+    }
+    unsigned char escTmp[10];
+    escTmp[0] = 0x1C;
+    escTmp[1] = 0x21;
+    escTmp[2] = n;
+    WriteToPort(escTmp, 3);
+    return 0; 
+    
+}
+
+
+/**********************************************************************
+* 函数名称： MW_ShowHanZiUndline
+* 功能描述： 选择/取消汉字下划线模式
+* 输入参数： 根据 n 值，选择或取消汉字的下划线
+                n           功能
+                0           取消汉字下划线
+                1           选择汉字下划线(1点宽)
+                2           选择汉字下划线(2点宽)
+           
+* 输出参数： 无
+* 返 回 值： 成功返回 0 ，失败返回 -1
+* 其它说明： 
+***********************************************************************/
+int CPrint::MW_ShowHanZiUndline(unsigned char n)
+{
+    if ((n < 0) || (n > 2))
+    {
+        fputs ("invalid argument!\n",stderr);
+        return -1;
+    }
+    unsigned char escTmp[10];
+    escTmp[0] = 0x1C;
+    escTmp[1] = 0x2D;
+    escTmp[2] = n;
+    WriteToPort(escTmp, 3);
+    return 0; 
+    
+}
+
+/**********************************************************************
+* 函数名称： MW_SetHanZiLeftAndRightSpace
+* 功能描述： 设置汉字字左右间距
+* 输入参数： 分别将汉字的左间距和右间距设置为 ucLeft,ucRight，单位为 英寸
+* 输出参数： 无
+* 返 回 值： 成功返回 0 ，失败返回 -1
+* 其它说明： 汉字最大间距为 36 mm,默认间距为 0.
+***********************************************************************/
+int CPrint::MW_SetHanZiLeftAndRightSpace(unsigned char ucLeft, unsigned char ucRight)
+{
+    
+    unsigned char escTmp[10];
+    escTmp[0] = 0x1C;
+    escTmp[1] = 0x53;
+    escTmp[2] = ucLeft;
+    escTmp[3] = ucRight;
+    WriteToPort(escTmp, 4);
+    return 0; 
+    
+}
+
+/**********************************************************************
+* 函数名称： MW_SetHanZiAsTwiceHeightAndWidth
+* 功能描述： 选择/取消汉字倍高倍宽
+* 输入参数： 当 n 的最低位为 0，取消汉字倍高倍宽模式
+             当 n 的最低位为 1，选择汉字倍高倍宽模式
+* 输出参数： 无
+* 返 回 值： 成功返回 0 ，失败返回 -1
+* 其它说明： 
+***********************************************************************/
+int CPrint::MW_SetHanZiAsTwiceHeightAndWidth(unsigned char n)
+{
+    
+    unsigned char escTmp[10];
+    escTmp[0] = 0x1C;
+    escTmp[1] = 0x57;
+    escTmp[2] = n;
+    WriteToPort(escTmp, 3);
+    return 0; 
+    
+}
+
+/**********************************************************************
+* 函数名称： MW_SetPrinterAgruments
+* 功能描述： 设置打印机参数，并保存 FLASH 中，下次开机生效
+* 输入参数： n 设置项选择，    m 选择设置
+                指令    n                   说明
+                1B 4E   00                  恢复出厂设置
+                1B 4E   02  m               设置串口波特率(默认 m=5, 波特率 115200)
+                                                m=1: 波特率 9600    m=2: 波特率 19200
+                                                m=3: 波特率 38400   m=4: 波特率 57600
+                1B 4E   03  m               设置打印模式(中文，西方)(默认m=1中文)
+                                                m=0: 英文模式
+                1B 4E   04  m               设置打印浓度级别(默认 m=3, Level3)
+                                                m=1: 打印浓度级别 1
+                                                m=2: 打印浓度级别 2
+                                                m=3: 打印浓度级别 3
+                                                m=4: 打印浓度级别 4
+                1B 4E   05  m               设置代码页(默认 m=0 代码页 0)
+* 输出参数： 无
+* 返 回 值： 成功返回 0 ，失败返回 -1
+* 其它说明： 
+***********************************************************************/
+int CPrint::MW_SetPrinterAgruments(unsigned char n, unsigned char m)
+{
+    unsigned char escTmp[10];
+
+    escTmp[0] = 0x1B;
+    escTmp[1] = 0x4E;
+    escTmp[2] = n;
+    escTmp[3] = m;
+
+    if ((n < 0) || (n > 5) || (n == 1))
+    {
+        fputs ("invalid argument!\n",stderr);
+        return -1;
+    }
+    if ((n < 0) || (n > 4))
+    {
+        fputs ("invalid argument!\n",stderr);
+        return -1;
+    }
+
+    switch(n)
+    {
+    case 0:
+        WriteToPort(escTmp, 3);
+        break;
+    case 2:
+    case 3:
+    case 4:
+    case 5:
+        WriteToPort(escTmp, 4);
         break;
     default:
         fputs ("invalid argument!\n",stderr);
