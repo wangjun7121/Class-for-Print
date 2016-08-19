@@ -177,17 +177,209 @@ int main(int argc, char* argv[])
 
     // 13. 汉字测试
     unsigned char ucMode = 0;
+//     unsigned char ucLeft,ucRight;
+//     //ucMode |= (1 << 2)|(1 << 3)|(1 << 7);
+//     // g_clsPrint->MW_SetHanZiMode(ucMode);
+//     //ucMode = 0;
+//     //g_clsPrint->MW_ShowHanZiUndline(ucMode);
+//     //ucLeft = 10;
+//     //ucRight = 10;
+//     //g_clsPrint->MW_SetHanZiLeftAndRightSpace(ucLeft, ucRight);
+//     ucMode = 1;
+//     g_clsPrint->MW_SetHanZiAsTwiceHeightAndWidth(ucMode);
+//     g_clsPrint->MW_PrintString(pString4);
+
+    // 大综合测试
+    unsigned char ucMode = 0;
+
+    //打印位图
+    g_clsPrint->MW_PrintBitmap(".\\花.bmp");
+     
+    // 下载/打印 Flash 中的位图 
+    g_clsPrint->MW_DownloadBitmapToFlash(".\\狗.bmp");
+    ucMode = 0;
+    g_clsPrint->MW_PrintFlashBitmap(ucMode);
+
+
+    // 字符右间距
+    g_clsPrint->MW_PrintString("字符右间距abc123");   
+    g_clsPrint->MW_SetCharRightSpace(50);
+    g_clsPrint->MW_PrintString("字符右间距abc123");  
+    g_clsPrint->MW_SetCharRightSpace(0);
+
+    // 打印模式：加粗，倍高，倍宽，下划线
+    ucMode |= (1 << 3); // 加粗
+    g_clsPrint->MW_SelectPrintMode(ucMode);
+    g_clsPrint->MW_PrintString("加粗abc123");   
+    ucMode |= (1 << 4); // 倍高
+    g_clsPrint->MW_SelectPrintMode(ucMode);
+    g_clsPrint->MW_PrintString("加粗倍高abc123");   
+    ucMode |= (1 << 5); // 倍宽
+    g_clsPrint->MW_SelectPrintMode(ucMode);
+    g_clsPrint->MW_PrintString("加粗倍高倍宽abc123");   
+    ucMode |= (1 << 7); // 下划线
+    g_clsPrint->MW_SelectPrintMode(ucMode);
+    ucMode = 2; // 设置下划线宽
+    g_clsPrint->MW_SetUndlineMode(ucMode);
+    g_clsPrint->MW_PrintString("加粗倍高倍宽下划线abc123"); 
+    ucMode = 0;
+    g_clsPrint->MW_SelectPrintMode(ucMode);
+    g_clsPrint->MW_PrintString("常规字体abc123");   
+
+    // 距离行首位置
+    g_clsPrint->MW_SetAbsPrintPosition(100);
+    g_clsPrint->MW_PrintString("距离行首绝对100abc");  
+    g_clsPrint->MW_SetAbsPrintPosition(0);
+    g_clsPrint->MW_PrintString("距离行首绝对0abc");   
+
+
+    // Ascii 下划线
+    ucMode = 2;
+    g_clsPrint->MW_SetUndlineMode(ucMode);  // 下划线
+    g_clsPrint->MW_PrintString("下划线abc123");  
+    ucMode = 0;
+    g_clsPrint->MW_SetUndlineMode(ucMode);  // 下划线
+
+    // 行间距
+    ucMode = 100;
+    g_clsPrint->MW_SetLineSpace(ucMode);
+    g_clsPrint->MW_PrintString("行间距100adc");   
+    g_clsPrint->MW_PrintString("行间距100adc");   
+    g_clsPrint->MW_SetDefaultLineSpace();
+
+    // 加粗
+    ucMode = 1;
+    g_clsPrint->MW_SetBoldMode(ucMode);
+    g_clsPrint->MW_PrintString("加粗abc123");   
+    ucMode = 0;
+    g_clsPrint->MW_SetBoldMode(ucMode);
+
+    // 选择 ASCII 字体
+    ucMode = 1;
+    g_clsPrint->MW_SelectAsciiFont(ucMode);
+    g_clsPrint->MW_PrintString("Compress Ascii 9x17"); 
+    ucMode = 0;
+    g_clsPrint->MW_SelectAsciiFont(ucMode);
+    g_clsPrint->MW_PrintString("Stander Ascii 12x24"); 
+
+    // 对齐方式
+    ucMode = 2;
+    g_clsPrint->MW_SelectAlignMode(ucMode);
+    g_clsPrint->MW_PrintString("右对齐adc123");
+    ucMode = 1;
+    g_clsPrint->MW_SelectAlignMode(ucMode);
+    g_clsPrint->MW_PrintString("中间对齐adc123");
+    ucMode = 0;
+    g_clsPrint->MW_SelectAlignMode(ucMode);
+    g_clsPrint->MW_PrintString("左对齐adc123");
+
+    // 选择字符大小
+    ucMode = (3 << 4) | (3);
+    g_clsPrint->MW_SelectFontSize(ucMode);
+    g_clsPrint->MW_PrintString("2倍高2倍宽adc123");
+    ucMode = (2 << 4) | (2);
+    g_clsPrint->MW_SelectFontSize(ucMode);
+    g_clsPrint->MW_PrintString("2倍高2倍宽adc123");
+    ucMode = (1 << 4) | (1);
+    g_clsPrint->MW_SelectFontSize(ucMode);
+    g_clsPrint->MW_PrintString("2倍高2倍宽adc123");
+    ucMode = 0;
+    g_clsPrint->MW_SelectFontSize(ucMode);
+    g_clsPrint->MW_PrintString("0倍高0倍宽adc123");
+
+    //黑白反显
+    ucMode = 1;
+    g_clsPrint->MW_SelectBlackAndWhiteReverse(ucMode);
+    g_clsPrint->MW_PrintString("黑白反显abc123");
+    ucMode = 0;
+    g_clsPrint->MW_SelectBlackAndWhiteReverse(ucMode);
+    g_clsPrint->MW_PrintString("黑白反显取消abc123");
+
+    // 汉字下划线
+    ucMode = 2;
+    g_clsPrint->MW_ShowHanZiUndline(ucMode);
+    g_clsPrint->MW_PrintString("汉字下划线adc123");
+    ucMode = 0;
+    g_clsPrint->MW_ShowHanZiUndline(ucMode);
+    g_clsPrint->MW_PrintString("取消汉字下划线abc123");
+
+    
+    // 汉字左右间距
     unsigned char ucLeft,ucRight;
-    //ucMode |= (1 << 2)|(1 << 3)|(1 << 7);
-    // g_clsPrint->MW_SetHanZiMode(ucMode);
-    //ucMode = 0;
-    //g_clsPrint->MW_ShowHanZiUndline(ucMode);
-    //ucLeft = 10;
-    //ucRight = 10;
-    //g_clsPrint->MW_SetHanZiLeftAndRightSpace(ucLeft, ucRight);
+    ucLeft = 100;
+    ucRight = 100;
+    g_clsPrint->MW_SetHanZiLeftAndRightSpace(ucLeft, ucRight);
+    g_clsPrint->MW_PrintString("汉字左100右100abc");
+    ucLeft = ucRight = 0;
+    g_clsPrint->MW_SetHanZiLeftAndRightSpace(ucLeft, ucRight);
+    g_clsPrint->MW_PrintString("汉字左0右0abc");
+
+
+    // 汉字倍高倍宽
     ucMode = 1;
     g_clsPrint->MW_SetHanZiAsTwiceHeightAndWidth(ucMode);
-    g_clsPrint->MW_PrintString(pString4);
+    g_clsPrint->MW_PrintString("汉字倍高倍宽abc123");
+    ucMode = 0;
+    g_clsPrint->MW_SetHanZiAsTwiceHeightAndWidth(ucMode);
+    g_clsPrint->MW_PrintString("汉字取消倍高倍宽abc123");
+    
+
+
+
+    // 条码测试
+    // UPC-A
+    ucMode = 0;
+    g_clsPrint->MW_PrintBarcode(ucMode, "01234567891");
+    // UPC-E
+    ucMode = 1;
+    g_clsPrint->MW_PrintBarcode(ucMode, "012345");
+    // JAN13/EAN13
+    ucMode = 2;
+    g_clsPrint->MW_PrintBarcode(ucMode, "012345678912");
+    // JAN8/EAN8
+    ucMode = 3;
+    g_clsPrint->MW_PrintBarcode(ucMode, "0123456");
+    // CODE39
+    ucMode = 4;
+    g_clsPrint->MW_PrintBarcode(ucMode, "0123ABC");
+    // ITF
+    ucMode = 5;
+    g_clsPrint->MW_PrintBarcode(ucMode, "012345");
+    // CODEBAR
+    ucMode = 6;
+    g_clsPrint->MW_PrintBarcode(ucMode, "A0123456A");
+
+    // UPC-A
+    ucMode = 65;
+    g_clsPrint->MW_PrintBarcode(ucMode, "01234567891");
+    // UPC-E
+    ucMode = 66;
+    g_clsPrint->MW_PrintBarcode(ucMode, "012345");
+    // JAN13/EAN13
+    ucMode = 67;
+    g_clsPrint->MW_PrintBarcode(ucMode, "012345678912");
+    // JAN8/EAN8
+    ucMode = 68;
+    g_clsPrint->MW_PrintBarcode(ucMode, "0123456");
+    // CODE39
+    ucMode = 69;
+    g_clsPrint->MW_PrintBarcode(ucMode, "0123ABC");
+    // ITF
+    ucMode = 70;
+    g_clsPrint->MW_PrintBarcode(ucMode, "012345");
+    // CODEBAR
+    ucMode = 71;
+    g_clsPrint->MW_PrintBarcode(ucMode, "A0123456A");
+
+    // CODE93
+    ucMode = 72;
+    g_clsPrint->MW_PrintBarcode(ucMode, "123456");
+    // CODE128
+    ucMode = 73;
+    g_clsPrint->MW_PrintBarcode(ucMode, "123456");
+
+
+
 
 //////////////////////////////////////////////////////////
 	g_clsPrint->ClosePort();

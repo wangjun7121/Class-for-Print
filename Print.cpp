@@ -364,7 +364,7 @@ int CPrint::MW_PrintBitmap(char *pcPicAddr)
 * 输入参数： n 表示右边距为 [ n * 横向移动单位或纵向移动单位]英寸 (0 <= n <= 255)
 * 输出参数： 无
 * 返 回 值： 无
-* 其它说明：
+* 其它说明：默认值为 0
 ***********************************************************************/
 int CPrint::MW_SetCharRightSpace(unsigned char n)
 {
@@ -425,7 +425,8 @@ int CPrint::MW_PrintString(char *pcString)
 
 * 输出参数： 无
 * 返 回 值： 0 成功，失败返回 -1
-* 其它说明： 
+* 其它说明： 加粗对所有字体有效，其他模式只对英文字母有效
+                下划线打印要先设置下划线线宽
 ***********************************************************************/
 int CPrint::MW_SelectPrintMode(unsigned char ucMode)
 {
@@ -599,29 +600,34 @@ int CPrint::MW_SelectAsciiFont(unsigned char n)
     WriteToPort(cWriteBuf, 3);
 	return 0;
 }
-
-/**********************************************************************
-* 函数名称： MW_SetRefPrintPosition
-* 功能描述： 设置相对横向打印位置
-* 输入参数： iPost 当前位置距离行首距离
-* 输出参数： 无
-* 返 回 值： 成功返回 0 ，失败返回 -1
-* 其它说明： 
-***********************************************************************/
-int CPrint::MW_SetRefPrintPosition(unsigned int iPost)
-{
-    unsigned char nL,nH;
-    nL = iPost % 256;
-    nH = iPost / 256;
-    
-    unsigned char cWriteBuf[10];
-    cWriteBuf[0] = 0x1B;
-    cWriteBuf[1] = 0x5C;
-    cWriteBuf[2] = nL;
-    cWriteBuf[3] = nH;
-    WriteToPort(cWriteBuf, 4);
-	return 0;
-}
+// 
+// /**********************************************************************
+// * 函数名称： MW_SetRefPrintPosition
+// * 功能描述： 设置相对横向打印位置
+// * 输入参数： iPost 距离当前位置距离 -65535 < iPost < 65535
+// * 输出参数： 无
+// * 返 回 值： 成功返回 0 ，失败返回 -1
+// * 其它说明： 
+// ***********************************************************************/
+// int CPrint::MW_SetRefPrintPosition(int iPost)
+// {
+//     unsigned char nL,nH;
+//     if (iPost < 0)
+//     {
+//         iPost = 65536 + iPost;
+//         
+//     }
+//     nL = iPost % 256;
+//     nH = iPost / 256;
+//     
+//     unsigned char cWriteBuf[10];
+//     cWriteBuf[0] = 0x1B;
+//     cWriteBuf[1] = 0x5C;
+//     cWriteBuf[2] = nL;
+//     cWriteBuf[3] = nH;
+//     WriteToPort(cWriteBuf, 4);
+// 	return 0;
+// }
 
 /**********************************************************************
 * 函数名称： MW_SelectAlignMode
@@ -651,9 +657,9 @@ int CPrint::MW_SelectAlignMode(unsigned char n)
 * 输出参数： 无
 * 返 回 值： 成功返回 0 ，失败返回 -1
 * 其它说明： 打印机自带 16K 的存储。
-             对于只支持 24 位深的位图，且宽，高均要是 8 的倍数！！
+             目前只支持 24 位深的位图，且宽，高均要是 8 的倍数！！
              位图宽满足 Width <= 376, 
-             位图高满足 47 * Height < 16K
+             位图高满足 Width * Height  < 128K
              【注：开头3行左右会重叠打印在一行，建议留白】
 ***********************************************************************/
 int CPrint::MW_DownloadBitmapToFlash(char *pcBitmapAddr)
@@ -792,9 +798,9 @@ int CPrint::MW_DownloadBitmapToFlash(char *pcBitmapAddr)
 
     printf("tmpX = %d tmpY = %d iFlashDataNum = %d\n",tmpX, tmpY, iFlashDataNum);
 
-//     WriteToPort(escTmp, 7);
-//     WriteToPort(pucFlashData, iFlashDataNum);
-//     Sleep(10000);
+    WriteToPort(escTmp, 7);
+    WriteToPort(pucFlashData, iFlashDataNum);
+    Sleep(10000);
 
     free(pucFlashData);
 	/////////////////////////////////////////////////////////////////////////
@@ -842,7 +848,7 @@ int CPrint::MW_PrintFlashBitmap(unsigned char n)
                 位      功能
                 0-3     字符高度选择
                 4-7     字符宽度选择 
-             高度、宽度的范围都是 0-7，表示与正常显示的倍数关系 
+             高度、宽度的范围都是 0-3，表示与正常显示的倍数关系 
     
 * 输出参数： 无
 * 返 回 值： 成功返回 0 ，失败返回 -1
@@ -853,7 +859,7 @@ int CPrint::MW_SelectFontSize(unsigned char n)
     unsigned char nL,nH;
     nL = n % 16;
     nH = n / 16;
-    if ((nL < 0) || (nL > 7) || (nH < 0) || (nH > 7) )
+    if ((nL < 0) || (nL > 3) || (nH < 0) || (nH > 3) )
     {
         fputs ("invalid argument!\n",stderr);
         return -1;
